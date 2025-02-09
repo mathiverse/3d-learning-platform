@@ -31,6 +31,8 @@
 .model-viewer {
   position: relative;
   height: calc(100vh - 64px);
+  width: 100%;
+  overflow: hidden;
 }
 
 .model-info {
@@ -100,4 +102,22 @@
 /* Add smooth transitions for all interactive elements */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+}
+
+/* Add styles for the sidebar transition */
+.MuiDrawer-root {
+  transition: width 0.3s ease-in-out;
+}
+
+.MuiDrawer-paper {
+  transition: transform 0.3s ease-in-out !important;
+}
+
+/* Update cursor styles */
+.MuiButtonBase-root {
+  cursor: pointer !important;
+}
+
+.MuiCard-root {
+  cursor: pointer;
 } 

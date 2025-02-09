@@ -19,7 +19,6 @@ const App: React.FC = () => {
   return (
     <ThemeProvider theme={isDarkMode ? darkTheme : lightTheme}>
       <CssBaseline />
-      <AnimatedBackground />
       <Router>
         <div className="app-container">
           <Navigation username="Student" onThemeToggle={toggleTheme} isDarkMode={isDarkMode} />

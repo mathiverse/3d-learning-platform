@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import {
   Grid,
   Card,
@@ -24,6 +24,7 @@ interface DisciplineCard {
 }
 
 const Dashboard: React.FC = () => {
+  const navigate = useNavigate();
   const disciplines: DisciplineCard[] = [
     {
       name: 'Mechanical Engineering',
@@ -56,7 +57,19 @@ const Dashboard: React.FC = () => {
       <Grid container spacing={3}>
         {disciplines.map((discipline) => (
           <Grid item xs={12} md={4} key={discipline.path}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card 
+              sx={{ 
+                height: '100%', 
+                display: 'flex', 
+                flexDirection: 'column',
+                cursor: 'pointer',
+                transition: 'transform 0.2s',
+                '&:hover': {
+                  transform: 'translateY(-4px)'
+                }
+              }}
+              onClick={() => navigate(`/model/${discipline.path}/intro`)}
+            >
               <CardContent sx={{ flexGrow: 1 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'center', mb: 2 }}>
                   {discipline.icon}
@@ -70,15 +83,6 @@ const Dashboard: React.FC = () => {
                 <Typography variant="subtitle2" color="primary" gutterBottom>
                   {discipline.modelCount} Models Available
                 </Typography>
-                <Button
-                  component={Link}
-                  to={`/model/${discipline.path}/intro`}
-                  variant="contained"
-                  fullWidth
-                  sx={{ mt: 2 }}
-                >
-                  Explore Models
-                </Button>
               </CardContent>
             </Card>
           </Grid>

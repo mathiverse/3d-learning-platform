@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import {
   AppBar,
   Toolbar,
@@ -29,10 +29,24 @@ const Navigation: React.FC<NavigationProps> = ({ username, onThemeToggle, isDark
   return (
     <AppBar position="static">
       <Toolbar>
-        <School sx={{ mr: 2 }} />
-        <Typography variant="h6" component="div" sx={{ flexGrow: 0, mr: 4 }}>
-          3D Learning Platform
-        </Typography>
+        <Box 
+          component={Link} 
+          to="/" 
+          sx={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            textDecoration: 'none', 
+            color: 'inherit',
+            '&:hover': {
+              opacity: 0.8
+            }
+          }}
+        >
+          <School sx={{ mr: 2 }} />
+          <Typography variant="h6" component="div" sx={{ flexGrow: 0, mr: 4 }}>
+            3D Learning Platform
+          </Typography>
+        </Box>
         <Box sx={{ flexGrow: 1, display: 'flex', gap: 2 }}>
           <Button
             component={NavLink}
