@@ -1,0 +1,103 @@
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1;
+}
+
+.navigation {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #f8f9fa;
+}
+
+.discipline-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+.discipline-card {
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  background-color: white;
+}
+
+.model-viewer {
+  position: relative;
+  height: calc(100vh - 64px);
+}
+
+.model-info {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  background-color: rgba(255,255,255,0.9);
+  padding: 1rem;
+  border-radius: 8px;
+  backdrop-filter: blur(8px);
+  transition: all 0.3s ease;
+}
+
+/* Add these new styles */
+.explore-btn {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  background-color: #007bff;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.explore-btn:hover {
+  background-color: #0056b3;
+}
+
+.nav-links a {
+  color: #333;
+  text-decoration: none;
+  margin: 0 1rem;
+  padding: 0.5rem;
+}
+
+.nav-links a.active {
+  color: #007bff;
+  border-bottom: 2px solid #007bff;
+}
+
+.model-count {
+  color: #666;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+}
+
+.stat-card {
+  background-color: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  text-align: center;
+}
+
+.progress-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 2rem;
+  padding: 2rem;
+}
+
+/* Add styles for active navigation links */
+.active {
+  background-color: rgba(255, 255, 255, 0.12);
+}
+
+/* Add smooth transitions for all interactive elements */
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+} 
