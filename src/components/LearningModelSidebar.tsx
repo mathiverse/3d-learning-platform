@@ -1,8 +1,6 @@
 import React from 'react';
 import {
-  Drawer,
   List,
-  ListItem,
   ListItemButton,
   ListItemIcon,
   ListItemText,
@@ -10,18 +8,26 @@ import {
   IconButton,
   Typography,
   Box,
-  useTheme
+  useTheme,
+  Divider,
+  Badge,
+  Tooltip,
+  Avatar,
+  LinearProgress
 } from '@mui/material';
 import {
-  ChevronLeft,
   ExpandLess,
   ExpandMore,
   ViewInAr,
   Quiz,
   VideoLibrary,
-  Assignment
+  Assignment,
+  CheckCircle,
+  InfoOutlined,
+  LockOutlined
 } from '@mui/icons-material';
 import { useNavigate, useParams } from 'react-router-dom';
+import CustomTooltip from './CustomTooltip';
 
 interface ModelSection {
   title: string;
@@ -103,17 +109,39 @@ interface LearningModelSidebarProps {
 
 const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({ open, onClose }) => {
   const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
   const navigate = useNavigate();
-  const { discipline = 'mechanical' } = useParams<{ discipline: string }>();
-  const [expandedSection, setExpandedSection] = React.useState<string | null>(null);
+  const { discipline = 'mechanical', modelId = 'intro' } = useParams<{ discipline: string; modelId: string }>();
+  const [expandedSections, setExpandedSections] = React.useState<string[]>([]);
+
+  // Simulate completed models
+  const completedModels = ['gear-system', 'lever-mechanism', 'intro'];
+
+  React.useEffect(() => {
+    // Auto-expand section containing current model
+    let sectionToExpand: string | null = null;
+    
+    disciplineContent[discipline]?.forEach(section => {
+      if (section.items.some(item => item.id === modelId)) {
+        sectionToExpand = section.title;
+      }
+    });
+    
+    if (sectionToExpand && !expandedSections.includes(sectionToExpand)) {
+      setExpandedSections(prev => [...prev, sectionToExpand!]);
+    }
+  }, [discipline, modelId, expandedSections]);
 
   const handleSectionClick = (sectionTitle: string) => {
-    setExpandedSection(expandedSection === sectionTitle ? null : sectionTitle);
+    setExpandedSections(prev => 
+      prev.includes(sectionTitle) 
+        ? prev.filter(title => title !== sectionTitle) 
+        : [...prev, sectionTitle]
+    );
   };
 
   const handleItemClick = (itemId: string) => {
     navigate(`/model/${discipline}/${itemId}`);
-    onClose();
   };
 
   const getIconForType = (type: string) => {
@@ -131,65 +159,165 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({ open, onClo
     }
   };
 
+  const getProgressForDiscipline = () => {
+    const allItems: string[] = [];
+    disciplineContent[discipline]?.forEach(section => {
+      section.items.forEach(item => {
+        allItems.push(item.id);
+      });
+    });
+    
+    const completedCount = allItems.filter(id => completedModels.includes(id)).length;
+    const progressPercentage = Math.round((completedCount / allItems.length) * 100);
+    
+    return {
+      completed: completedCount,
+      total: allItems.length,
+      percentage: progressPercentage
+    };
+  };
+
+  const progress = getProgressForDiscipline();
+  const disciplineTitle = discipline.charAt(0).toUpperCase() + discipline.slice(1);
+
   return (
-    <Drawer
-      variant="persistent"
-      anchor="left"
-      open={open}
-      sx={{
-        width: 320,
-        flexShrink: 0,
-        '& .MuiDrawer-paper': {
-          width: 320,
-          boxSizing: 'border-box',
-          mt: '64px', // Height of AppBar
-          backgroundColor: theme.palette.background.default,
-        },
-      }}
-    >
-      <Box sx={{ display: 'flex', alignItems: 'center', p: 2, justifyContent: 'space-between' }}>
-        <Typography variant="h6" color="primary">
-          Learning Content
+    <Box sx={{ 
+      height: '100%',
+      overflow: 'auto',
+      display: 'flex',
+      flexDirection: 'column',
+      p: 0
+    }}>
+      <Box sx={{ 
+        p: 3, 
+        background: isDarkMode 
+          ? `linear-gradient(135deg, ${theme.palette.primary.dark} 0%, ${theme.palette.primary.main} 100%)` 
+          : `linear-gradient(135deg, ${theme.palette.primary.light} 0%, ${theme.palette.primary.main} 100%)`,
+        color: '#fff',
+        mb: 2
+      }}>
+        <Typography variant="h5" fontWeight="600" gutterBottom>
+          {disciplineTitle} Models
         </Typography>
-        <IconButton onClick={onClose}>
-          <ChevronLeft />
-        </IconButton>
+        <Typography variant="body2" sx={{ opacity: 0.9, mb: 2 }}>
+          Learning Path
+        </Typography>
+        
+        <Typography variant="body2" fontWeight="500" sx={{ mt: 3, mb: 1, display: 'flex', justifyContent: 'space-between' }}>
+          <span>Course Progress</span>
+          <span>{progress.percentage}%</span>
+        </Typography>
+        <LinearProgress 
+          variant="determinate" 
+          value={progress.percentage} 
+          sx={{ 
+            mb: 1.5, 
+            height: 8, 
+            borderRadius: 4,
+            backgroundColor: 'rgba(255,255,255,0.2)',
+            '& .MuiLinearProgress-bar': {
+              backgroundColor: '#fff',
+            }
+          }} 
+        />
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', fontSize: 14 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+            <CheckCircle sx={{ fontSize: 16, mr: 0.5 }} />
+            <span>{progress.completed} Completed</span>
+          </Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', color: 'rgba(255,255,255,0.7)' }}>
+            <InfoOutlined sx={{ fontSize: 16, mr: 0.5 }} />
+            <span>{progress.total} Total</span>
+          </Box>
+        </Box>
       </Box>
 
-      <List component="nav">
-        {disciplineContent[discipline]?.map((section) => (
-          <React.Fragment key={section.title}>
-            <ListItemButton onClick={() => handleSectionClick(section.title)}>
-              <ListItemText 
-                primary={section.title} 
-                sx={{ color: theme.palette.text.primary }}
-              />
-              {expandedSection === section.title ? <ExpandLess /> : <ExpandMore />}
-            </ListItemButton>
-            <Collapse in={expandedSection === section.title} timeout="auto" unmountOnExit>
-              <List component="div" disablePadding>
-                {section.items.map((item) => (
-                  <ListItemButton
-                    key={item.id}
-                    sx={{ pl: 4 }}
-                    onClick={() => handleItemClick(item.id)}
-                  >
-                    <ListItemIcon>
-                      {getIconForType(item.type)}
-                    </ListItemIcon>
-                    <ListItemText 
-                      primary={item.title}
-                      secondary={item.duration}
-                      sx={{ color: theme.palette.text.secondary }}
-                    />
-                  </ListItemButton>
-                ))}
-              </List>
-            </Collapse>
-          </React.Fragment>
-        ))}
+      <List component="nav" sx={{ px: 2, flexGrow: 1 }}>
+        {disciplineContent[discipline]?.map((section) => {
+          const isExpanded = expandedSections.includes(section.title);
+          
+          return (
+            <React.Fragment key={section.title}>
+              <ListItemButton 
+                onClick={() => handleSectionClick(section.title)}
+                sx={{ 
+                  mb: 0.5, 
+                  borderRadius: 2,
+                  bgcolor: isExpanded 
+                    ? (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)') 
+                    : 'transparent'
+                }}
+              >
+                <ListItemText 
+                  primary={section.title} 
+                  primaryTypographyProps={{ 
+                    fontWeight: 600, 
+                    variant: 'subtitle1' 
+                  }}
+                />
+                {isExpanded ? <ExpandLess /> : <ExpandMore />}
+              </ListItemButton>
+              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                <List component="div" disablePadding>
+                  {section.items.map((item) => {
+                    const isActive = item.id === modelId;
+                    const completed = completedModels.includes(item.id);
+                    
+                    return (
+                      <ListItemButton
+                        key={item.id}
+                        sx={{ 
+                          pl: 4, 
+                          borderRadius: 2,
+                          mb: 0.5,
+                          backgroundColor: isActive 
+                            ? (isDarkMode ? 'rgba(25, 118, 210, 0.2)' : 'rgba(25, 118, 210, 0.08)')
+                            : 'transparent',
+                          '&:hover': {
+                            backgroundColor: isActive 
+                              ? (isDarkMode ? 'rgba(25, 118, 210, 0.3)' : 'rgba(25, 118, 210, 0.12)')
+                              : (isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)')
+                          }
+                        }}
+                        onClick={() => handleItemClick(item.id)}
+                      >
+                        <ListItemIcon>
+                          <Badge 
+                            color="success" 
+                            variant="dot" 
+                            invisible={!completed || isActive}
+                            sx={{ '& .MuiBadge-badge': { top: 4, right: 4 } }}
+                          >
+                            {getIconForType(item.type)}
+                          </Badge>
+                        </ListItemIcon>
+                        <ListItemText 
+                          primary={item.title}
+                          secondary={item.duration}
+                          primaryTypographyProps={{ 
+                            color: isActive ? 'primary' : 'inherit',
+                            fontWeight: isActive ? 600 : 400,
+                          }}
+                          secondaryTypographyProps={{
+                            sx: { 
+                              display: 'flex', 
+                              alignItems: 'center',
+                              fontSize: 12
+                            }
+                          }}
+                        />
+                        {completed && <CheckCircle color="success" fontSize="small" />}
+                        {item.id === 'components-assignment' && <LockOutlined fontSize="small" color="action" />}
+                      </ListItemButton>
+                    );
+                  })}
+                </List>
+              </Collapse>
+            </React.Fragment>
+          );
+        })}
       </List>
-    </Drawer>
+    </Box>
   );
 };
 
