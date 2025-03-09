@@ -31,7 +31,11 @@ const InfoButton = styled(Button)`
   }
 `;
 
-const FloatingActionButton = ({ handleClick }) => {
+interface FloatingActionButtonProps {
+  handleClick: () => void;
+}
+
+const FloatingActionButton: React.FC<FloatingActionButtonProps> = ({ handleClick }) => {
   return (
     <FloatingButtonContainer>
       <InfoButton onClick={handleClick}>

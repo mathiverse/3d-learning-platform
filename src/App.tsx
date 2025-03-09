@@ -16,7 +16,7 @@ function App() {
     localStorage.getItem('darkMode') === 'true' || false
   );
   
-  const [username, setUsername] = useState('Student');
+  const [username] = useState('Student');
 
   const toggleTheme = () => {
     const newMode = !darkMode;

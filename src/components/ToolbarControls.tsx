@@ -24,19 +24,38 @@ const ToolButton = styled.button`
   }
 `;
 
-const ToolbarControls = () => {
+interface ToolbarControlsProps {
+  onZoomIn?: () => void;
+  onZoomOut?: () => void;
+  onReset?: () => void;
+  onExitFullscreen?: () => void;
+}
+
+/**
+ * Toolbar controls for 3D viewer navigation
+ * @param {Function} onZoomIn - Zoom in handler
+ * @param {Function} onZoomOut - Zoom out handler
+ * @param {Function} onReset - Reset view handler
+ * @param {Function} onExitFullscreen - Exit fullscreen handler
+ */
+const ToolbarControls: React.FC<ToolbarControlsProps> = ({
+  onZoomIn,
+  onZoomOut,
+  onReset,
+  onExitFullscreen
+}) => {
   return (
     <ToolbarContainer>
-      <ToolButton>
+      <ToolButton onClick={onZoomIn}>
         <Icon name="zoom_in" />
       </ToolButton>
-      <ToolButton>
+      <ToolButton onClick={onZoomOut}>
         <Icon name="zoom_out" />
       </ToolButton>
-      <ToolButton>
+      <ToolButton onClick={onReset}>
         <Icon name="refresh" />
       </ToolButton>
-      <ToolButton>
+      <ToolButton onClick={onExitFullscreen}>
         <Icon name="fullscreen_exit" />
       </ToolButton>
     </ToolbarContainer>

@@ -34,7 +34,14 @@ const ControlsContainer = styled.div`
   z-index: 901;
 `;
 
-const FullScreenMode = ({ 
+interface FullScreenModeProps {
+  isFullScreen: boolean;
+  onExitFullScreen: () => void;
+  children: React.ReactNode;
+  handleFloatingActionClick: () => void;
+}
+
+const FullScreenMode: React.FC<FullScreenModeProps> = ({ 
   isFullScreen, 
   onExitFullScreen, 
   children,
