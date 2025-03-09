@@ -10,7 +10,6 @@ import {
   Paper,
   useTheme,
   CardActionArea,
-  Divider,
   Chip,
   alpha
 } from '@mui/material';

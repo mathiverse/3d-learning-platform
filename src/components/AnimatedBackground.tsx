@@ -15,9 +15,9 @@ const AnimatedBackground: React.FC = () => {
 
     // Create animated geometric shapes
     const geometry = new THREE.IcosahedronGeometry(1, 0);
-    const geometries = [];
-    const materials = [];
-    const meshes = [];
+    const geometries: THREE.BufferGeometry[] = [];
+    const materials: THREE.Material[] = [];
+    const meshes: THREE.Mesh[] = [];
 
     for (let i = 0; i < 50; i++) {
       const material = new THREE.MeshBasicMaterial({

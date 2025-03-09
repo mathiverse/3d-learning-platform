@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 import FloatingActionButton from './FloatingActionButton';
 import ToolbarControls from './ToolbarControls'; // Import your toolbar component
 // Import other tools/dialogs you want to display in full screen
@@ -60,7 +60,9 @@ const FullScreenMode: React.FC<FullScreenModeProps> = ({
         
         {/* Floating toolbar controls (zoom, rotate, etc.) */}
         <ControlsContainer>
-          <ToolbarControls />
+          <ToolbarControls 
+            onExitFullscreen={onExitFullScreen}
+          />
         </ControlsContainer>
       </ContentArea>
       

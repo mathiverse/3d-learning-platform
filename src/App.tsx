@@ -86,25 +86,27 @@ function App() {
   });
 
   return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline />
-      <Router>
-        <Box className="app-container">
-          <Navigation 
-            username={username} 
-            onThemeToggle={toggleTheme} 
-            isDarkMode={darkMode} 
-          />
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/model/:discipline/:modelId" element={<ModelViewer />} />
-            <Route path="/progress" element={<CourseProgress />} />
-            <Route path="/settings" element={<SettingsPage isDarkMode={darkMode} onThemeToggle={toggleTheme} />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Box>
-      </Router>
-    </ThemeProvider>
+    <React.StrictMode>
+      <ThemeProvider theme={theme}>
+        <CssBaseline />
+        <Router>
+          <Box className="app-container">
+            <Navigation 
+              username={username} 
+              onThemeToggle={toggleTheme} 
+              isDarkMode={darkMode} 
+            />
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/model/:discipline/:modelId" element={<ModelViewer />} />
+              <Route path="/progress" element={<CourseProgress />} />
+              <Route path="/settings" element={<SettingsPage isDarkMode={darkMode} onThemeToggle={toggleTheme} />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Box>
+        </Router>
+      </ThemeProvider>
+    </React.StrictMode>
   );
 }
 

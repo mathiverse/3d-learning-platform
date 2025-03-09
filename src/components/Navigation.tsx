@@ -20,22 +20,19 @@ import {
   ListItemText,
   Divider,
   Badge,
-  Tooltip,
-  alpha
 } from '@mui/material';
 import {
   Brightness4,
   Brightness7,
   Dashboard,
   Timeline,
-  School,
-  AccountCircle,
   Menu as MenuIcon,
   Settings,
   Logout,
   Notifications,
   Help,
-  BookmarkBorder
+  BookmarkBorder,
+  ViewInAr,
 } from '@mui/icons-material';
 import CustomTooltip from './CustomTooltip';
 
@@ -131,10 +128,11 @@ const Navigation: React.FC<NavigationProps> = ({ username, onThemeToggle, isDark
                 }
               }}
             >
-              <School sx={{ 
+              <ViewInAr sx={{ 
                 mr: 1.5, 
                 color: theme.palette.primary.main,
-                fontSize: 28
+                fontSize: 32,
+                filter: 'drop-shadow(0px 2px 2px rgba(0,0,0,0.1))'
               }} />
               <Typography 
                 variant="h6" 
@@ -143,10 +141,18 @@ const Navigation: React.FC<NavigationProps> = ({ username, onThemeToggle, isDark
                   flexGrow: 0, 
                   mr: 4,
                   fontWeight: 700,
-                  display: { xs: 'none', sm: 'block' } 
+                  fontFamily: "'Orbitron', sans-serif",
+                  letterSpacing: 1,
+                  fontSize: '1.5rem',
+                  display: { xs: 'none', sm: 'block' },
+                  background: theme.palette.mode === 'dark' 
+                    ? 'linear-gradient(90deg, #64b5f6 0%, #2196f3 100%)' 
+                    : 'linear-gradient(90deg, #1976d2 0%, #2196f3 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
                 }}
               >
-                3D Learning Hub
+                EduDive
               </Typography>
             </Box>
             

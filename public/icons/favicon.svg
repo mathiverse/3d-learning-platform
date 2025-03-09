@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#1976d2" />
+      <stop offset="100%" stop-color="#64b5f6" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Base cube -->
+  <rect x="86" y="86" width="340" height="340" rx="30" ry="30" fill="url(#logoGradient)" />
+  
+  <!-- 3D elements -->
+  <path d="M166 166 L346 166 L346 346 L166 346 Z" fill="white" fill-opacity="0.2" stroke="white" stroke-width="8" />
+  
+  <!-- E letter -->
+  <path d="M190 220 L280 220 M190 190 L280 190 M190 250 L260 250 M190 190 L190 320 M190 320 L280 320" stroke="white" stroke-width="14" stroke-linecap="round" />
+  
+  <!-- D letter -->
+  <path d="M300 190 C340 190 340 320 300 320 M300 190 L300 320" stroke="white" stroke-width="14" stroke-linecap="round" />
+</svg> 

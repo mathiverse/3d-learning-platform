@@ -27,9 +27,7 @@ import {
   Visibility,
   Save,
   ColorLens,
-  VolumeUp,
   Language,
-  Accessibility
 } from '@mui/icons-material';
 
 interface SettingsPageProps {
@@ -50,6 +48,10 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isDarkMode, onThemeToggle }
   const handleSaveSettings = () => {
     // In a real app, we would save all settings here
     alert('Settings saved successfully!');
+  };
+
+  const handleColorModeChange = () => {
+    onThemeToggle();
   };
 
   return (
@@ -257,7 +259,7 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isDarkMode, onThemeToggle }
                     control={
                       <Switch 
                         checked={isDarkMode} 
-                        onChange={onThemeToggle} 
+                        onChange={handleColorModeChange} 
                         color="primary" 
                       />
                     }
@@ -323,8 +325,11 @@ const SettingsPage: React.FC<SettingsPageProps> = ({ isDarkMode, onThemeToggle }
                     <Typography>Slow</Typography>
                     <Slider
                       value={animationSpeed}
-                      onChange={(e, newValue) => setAnimationSpeed(newValue as number)}
-                      aria-labelledby="animation-speed-slider"
+                      min={0}
+                      max={100}
+                      step={10}
+                      valueLabelDisplay="auto"
+                      onChange={(_e, newValue) => setAnimationSpeed(newValue as number)}
                     />
                     <Typography>Fast</Typography>
                   </Box>

@@ -1,50 +1,84 @@
-# React + TypeScript + Vite
+# EduDive - Interactive 3D Learning Platform
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+EduDive is an educational web application that provides interactive 3D models for engineering disciplines including mechanical, civil, and electrical engineering. The platform enables students to explore complex engineering concepts through manipulable 3D visualizations.
 
-Currently, two official plugins are available:
+![EduDive Logo](public/icons/favicon.svg)
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
 
-## Expanding the ESLint configuration
+- Interactive 3D model viewing with zoom, rotate, and pan capabilities
+- Models organized by engineering disciplines
+- Dark/light mode theme toggle
+- Responsive design for desktop and mobile devices
+- Course progress tracking
+- Wireframe viewing mode
 
-If you are developing a production application, we recommend updating the configuration to enable type aware lint rules:
+## Technology Stack
 
-- Configure the top-level `parserOptions` property like this:
+- React 18 with TypeScript
+- Vite for fast builds and development
+- Material UI components
+- Three.js for 3D rendering
+- React Router for navigation
 
-```js
-export default tseslint.config({
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
+## Development
+
+### Prerequisites
+
+- Node.js 18+
+- npm or yarn
+
+### Installation
+
+```bash
+# Clone the repository
+git clone <repository-url>
+cd edudive
+
+# Install dependencies
+npm install
+
+# Start development server
+npm run dev
 ```
 
-- Replace `tseslint.configs.recommended` to `tseslint.configs.recommendedTypeChecked` or `tseslint.configs.strictTypeChecked`
-- Optionally add `...tseslint.configs.stylisticTypeChecked`
-- Install [eslint-plugin-react](https://github.com/jsx-eslint/eslint-plugin-react) and update the config:
+### Building for Production
 
-```js
-// eslint.config.js
-import react from 'eslint-plugin-react'
-
-export default tseslint.config({
-  // Set the react version
-  settings: { react: { version: '18.3' } },
-  plugins: {
-    // Add the react plugin
-    react,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended rules
-    ...react.configs.recommended.rules,
-    ...react.configs['jsx-runtime'].rules,
-  },
-})
+```bash
+# Build the application
+npm run build
 ```
+
+This creates a `dist` folder containing the compiled application. **Note: You do not need to delete the dist folder before each build** - the build process will automatically clean and recreate it.
+
+## Deployment
+
+The application is configured for automatic deployment with Netlify:
+
+1. The `netlify.toml` file contains the build settings and redirect rules
+2. The `public/_redirects` file ensures proper SPA routing
+3. When pushing to the connected GitHub repository, Netlify automatically:
+   - Runs the build process
+   - Deploys the content of the `dist` directory
+   - Applies the configuration from netlify.toml
+
+## Project Structure
+
+```
+edudive/
+├── public/             # Static assets
+│   └── icons/          # App icons 
+├── src/
+│   ├── components/     # React components
+│   ├── hooks/          # Custom React hooks
+│   ├── models/         # Data models
+│   ├── styles/         # CSS and styling
+│   ├── theme/          # MUI theme configuration
+│   ├── App.tsx         # Main app component
+│   └── main.tsx        # Entry point
+└── dist/               # Built files (created during build)
+```
+
+## License
+
+MIT

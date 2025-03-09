@@ -9,7 +9,6 @@ import {
   Box,
   Avatar,
   useTheme,
-  Divider,
   Paper
 } from '@mui/material';
 import {

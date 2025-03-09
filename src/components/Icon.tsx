@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 
 interface IconProps {
   name: string;
@@ -8,14 +8,16 @@ interface IconProps {
   className?: string;
 }
 
-const IconWrapper = styled.span<{
+interface IconWrapperProps {
   size?: number;
   color?: string;
-}>`
+}
+
+const IconWrapper = styled.span<IconWrapperProps>`
   font-family: 'Material Icons';
   font-weight: normal;
   font-style: normal;
-  font-size: ${props => props.size ? `${props.size}px` : '24px'};
+  font-size: ${(props) => props.size ? `${props.size}px` : '24px'};
   line-height: 1;
   letter-spacing: normal;
   text-transform: none;
@@ -26,7 +28,7 @@ const IconWrapper = styled.span<{
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
-  color: ${props => props.color || 'inherit'};
+  color: ${(props) => props.color || 'inherit'};
 `;
 
 /**

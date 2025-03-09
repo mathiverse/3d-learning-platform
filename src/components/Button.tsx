@@ -1,5 +1,5 @@
 import React from 'react';
-import styled from 'styled-components';
+import styled from '@emotion/styled';
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: 'primary' | 'secondary' | 'text';
@@ -7,10 +7,12 @@ interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   children: React.ReactNode;
 }
 
-const StyledButton = styled.button<{
+interface StyledButtonProps {
   variant?: string;
   size?: string;
-}>`
+}
+
+const StyledButton = styled.button<StyledButtonProps>`
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -57,6 +59,13 @@ const StyledButton = styled.button<{
   }
 `;
 
+/**
+ * Custom button component with different variants and sizes
+ * @param variant - Button style variant
+ * @param size - Button size
+ * @param children - Button content
+ * @param props - Additional button props
+ */
 export const Button: React.FC<ButtonProps> = ({
   variant = 'primary',
   size = 'medium',

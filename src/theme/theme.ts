@@ -1,4 +1,8 @@
 import { createTheme } from '@mui/material';
+import type { } from '@mui/material/themeCssVarsAugmentation';
+
+// Define a custom theme options type to avoid TypeScript errors
+const createCustomTheme = (options: any) => createTheme(options);
 
 const commonThemeProps = {
     typography: {
@@ -45,6 +49,9 @@ const commonThemeProps = {
             },
         },
         MuiButton: {
+            defaultProps: {
+                disableRipple: false,
+            },
             styleOverrides: {
                 root: {
                     borderRadius: 8,
@@ -69,7 +76,7 @@ const commonThemeProps = {
     },
 };
 
-export const lightTheme = createTheme({
+export const lightTheme = createCustomTheme({
     ...commonThemeProps,
     palette: {
         mode: 'light',
@@ -96,7 +103,7 @@ export const lightTheme = createTheme({
     },
 });
 
-export const darkTheme = createTheme({
+export const darkTheme = createCustomTheme({
     ...commonThemeProps,
     palette: {
         mode: 'dark',
