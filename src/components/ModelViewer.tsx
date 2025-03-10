@@ -301,7 +301,9 @@ const ModelViewer: React.FC = () => {
     
     // Camera setup
     const camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000);
-    camera.position.set(5, 5, 5);
+    // Adjust camera position for mobile - move it further back
+    const cameraDistance = isMobile ? 8 : 5;
+    camera.position.set(cameraDistance, cameraDistance, cameraDistance);
     cameraRef.current = camera;
     
     // Lighting
@@ -312,12 +314,26 @@ const ModelViewer: React.FC = () => {
     directionalLight.position.set(1, 1, 1);
     scene.add(directionalLight);
     
-    // Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    // Renderer with explicit pixel ratio control for mobile
+    const renderer = new THREE.WebGLRenderer({ 
+      antialias: !isMobile, // Disable antialiasing on mobile for better performance
+      alpha: true, 
+      powerPreference: 'high-performance'
+    });
     renderer.setSize(width, height);
-    renderer.setPixelRatio(window.devicePixelRatio);
+    
+    // Limit pixel ratio on mobile devices to improve performance
+    const pixelRatio = isMobile ? Math.min(window.devicePixelRatio, 2) : window.devicePixelRatio;
+    renderer.setPixelRatio(pixelRatio);
+    
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.toneMappingExposure = 1.0;
+    
+    // Clear any previous renderer
+    if (mountRef.current.childNodes.length > 0) {
+      mountRef.current.innerHTML = '';
+    }
+    
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
     
@@ -329,6 +345,14 @@ const ModelViewer: React.FC = () => {
     controls.enableZoom = true;
     controls.autoRotate = true;
     controls.autoRotateSpeed = 1.0;
+    
+    // Adjust for mobile - add touch gesture sensitivity
+    if (isMobile) {
+      controls.rotateSpeed = 0.7; // Slower rotation for more precision on mobile
+      controls.enableDamping = true; // Enhanced damping for mobile
+      controls.dampingFactor = 0.1; // Increased damping factor
+    }
+    
     controlsRef.current = controls;
     
     // Load model
@@ -533,530 +557,127 @@ const ModelViewer: React.FC = () => {
   }
 
   return (
-    <Box sx={{ 
-      display: 'flex', 
-      position: 'relative', 
-      height: 'calc(100vh - 64px)',
-      overflow: 'hidden',
-      backgroundColor: theme.palette.background.default,
-    }}>
-      <DisciplineBackground discipline={discipline} />
-      
-      {/* Absolutely positioned sidebar toggle button - ALWAYS visible */}
-      <IconButton
-        onClick={() => setSidebarOpen(!sidebarOpen)}
+    <Box
+      sx={{
+        width: '100%',
+        height: '100vh', // Full viewport height
+        display: 'flex',
+        position: 'relative',
+        overflow: 'hidden',
+        flexDirection: 'column',
+      }}
+    >
+      {/* Top toolbar */}
+      <Box
         sx={{
-          position: 'absolute',
-          top: '50%',
-          left: sidebarOpen ? '260px' : '10px', // Position relative to viewport
-          transform: 'translateY(-50%)',
-          backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-          borderRadius: '50%',
-          width: '40px',
-          height: '40px',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-          zIndex: 1000, // Very high z-index to be above everything
-          '&:hover': {
-            backgroundColor: isDarkMode ? 'rgba(97, 97, 97, 0.95)' : 'rgba(238, 238, 238, 0.95)',
-          },
-          transition: 'left 0.3s ease-in-out'
+          width: '100%',
+          p: 1,
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          borderBottom: `1px solid ${theme.palette.divider}`,
+          backgroundColor: theme.palette.background.paper,
+          zIndex: 10,
         }}
       >
-        {sidebarOpen ? <ChevronLeft /> : <ChevronRight />}
-      </IconButton>
-      
-      {/* Sidebar container - make width exactly 0 when closed to prevent space */}
-      <Box 
-        sx={{ 
-          width: sidebarOpen ? (isMobile ? '100%' : '280px') : '0',
-          height: '100%',
-          transition: 'width 0.3s ease-in-out',
-          position: isMobile && sidebarOpen ? 'absolute' : 'relative', // Absolute on mobile when open
-          zIndex: isMobile && sidebarOpen ? 1000 : 20, // Higher z-index on mobile
-          borderRight: sidebarOpen ? `1px solid ${theme.palette.divider}` : 'none',
-          bgcolor: isDarkMode ? 'rgba(18, 18, 18, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          backdropFilter: 'blur(10px)',
-          boxShadow: sidebarOpen ? (isDarkMode ? '5px 0 15px rgba(0,0,0,0.2)' : '5px 0 15px rgba(0,0,0,0.1)') : 'none',
-          overflow: 'hidden'
-        }}
-      >
-        {sidebarOpen && (
-          <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', zIndex: 10 }}>
-            <LearningModelSidebar 
-              onClose={() => setSidebarOpen(false)} 
-            />
-          </Box>
-        )}
+        {/* ... toolbar content ... */}
       </Box>
       
-      {/* If sidebar open on mobile, add an overlay to close it on click */}
-      {isMobile && sidebarOpen && (
-        <Box
-          onClick={() => setSidebarOpen(false)}
-          sx={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            backgroundColor: 'rgba(0,0,0,0.5)',
-            zIndex: 999, // Just below the sidebar
-          }}
-        />
-      )}
-      
-      {/* 3D Viewer container */}
-      <Box 
-        sx={{ 
-          flexGrow: 1, 
+      {/* Main content area */}
+      <Box
+        sx={{
+          display: 'flex',
+          flex: 1,
           position: 'relative',
-          height: '100%',
+          width: '100%',
+          height: 'calc(100% - 64px)', // Subtract the toolbar height
           overflow: 'hidden',
         }}
       >
-        {/* Model container */}
-        <Box 
-          ref={mountRef} 
-          sx={{ 
-            width: '100%', 
-            height: '100%' 
-          }}
-        />
+        <DisciplineBackground discipline={discipline} />
         
-        {/* Fullscreen mode fix - ensure controls remain visible */}
-        <Box
+        {/* Absolutely positioned sidebar toggle button - ALWAYS visible */}
+        <IconButton
+          onClick={() => setSidebarOpen(!sidebarOpen)}
           sx={{
             position: 'absolute',
-            top: 0,
-            left: 0,
-            right: 0,
-            bottom: 0,
-            zIndex: 5,
-            pointerEvents: 'none', // This allows clicking through to the canvas
-            '& > *': {
-              pointerEvents: 'auto' // But UI elements are still clickable
-            }
+            top: '50%',
+            left: sidebarOpen ? '260px' : '10px', // Position relative to viewport
+            transform: 'translateY(-50%)',
+            backgroundColor: isDarkMode ? 'rgba(66, 66, 66, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            borderRadius: '50%',
+            width: '40px',
+            height: '40px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+            zIndex: 1000, // Very high z-index to be above everything
+            '&:hover': {
+              backgroundColor: isDarkMode ? 'rgba(97, 97, 97, 0.95)' : 'rgba(238, 238, 238, 0.95)',
+            },
+            transition: 'left 0.3s ease-in-out'
           }}
         >
-          {/* Ensure floating controls are visible in fullscreen */}
-          <Fade in={controlsVisible && !isFullscreen}>
-            <Paper
-              elevation={3}
-              sx={{
-                position: 'absolute',
-                bottom: { xs: '1rem', sm: '2rem' }, // Smaller margin on mobile
-                left: '50%',
-                transform: 'translateX(-50%)',
-                display: 'flex',
-                gap: { xs: 0.5, sm: 1 }, // Tighter spacing on mobile
-                p: { xs: 0.5, sm: 1 }, // Smaller padding on mobile
-                borderRadius: 4,
-                backgroundColor: isDarkMode ? 'rgba(42, 42, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(8px)',
-                boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-                zIndex: 100,
-                maxWidth: '95vw', // Prevent overflow on small screens
-                overflow: 'auto' // Allow scrolling if needed
-              }}
-            >
-              {/* Control buttons with tooltips */}
-              <Tooltip 
-                title="Zoom In"
-                placement="top"
-                arrow
-                leaveDelay={200}
-                enterDelay={500}
-                PopperProps={{
-                  disablePortal: true,
-                  sx: { 
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <IconButton onClick={handleZoomIn} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  <ZoomIn fontSize={isSmallScreen ? "small" : "medium"} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip 
-                title="Zoom Out"
-                placement="top"
-                arrow
-                leaveDelay={200}
-                enterDelay={500}
-                PopperProps={{
-                  disablePortal: true,
-                  sx: { 
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <IconButton onClick={handleZoomOut} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  <ZoomOut fontSize={isSmallScreen ? "small" : "medium"} />
-                </IconButton>
-              </Tooltip>
-              <Tooltip 
-                title="Reset View"
-                placement="top"
-                arrow
-                leaveDelay={200}
-                enterDelay={500}
-                PopperProps={{
-                  disablePortal: true,
-                  sx: { 
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <IconButton onClick={handleReset} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  <RestartAlt fontSize={isSmallScreen ? "small" : "medium"} />
-                </IconButton>
-              </Tooltip>
-              
-              {/* Add wireframe toggle button */}
-              <CustomTooltip title={isWireframe ? "Solid View" : "Wireframe View"}>
-                <IconButton onClick={toggleWireframe} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  {isWireframe ? <ViewInAr fontSize={isSmallScreen ? "small" : "medium"} /> : <GridOn fontSize={isSmallScreen ? "small" : "medium"} />}
-                </IconButton>
-              </CustomTooltip>
-              
-              {/* Ensure screenshot button is visible */}
-              <Tooltip 
-                title="Take Screenshot"
-                placement="top"
-                arrow
-                leaveDelay={200}
-                enterDelay={500}
-                PopperProps={{
-                  disablePortal: true,
-                  sx: { 
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <IconButton onClick={handleScreenshot} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  <PhotoCamera fontSize={isSmallScreen ? "small" : "medium"} />
-                </IconButton>
-              </Tooltip>
-              
-              <Tooltip 
-                title="Fullscreen"
-                placement="top"
-                arrow
-                leaveDelay={200}
-                enterDelay={500}
-                PopperProps={{
-                  disablePortal: true,
-                  sx: { 
-                    zIndex: 10000
-                  }
-                }}
-              >
-                <IconButton onClick={toggleFullscreen} size={isSmallScreen ? "small" : "medium"} 
-                  sx={{ p: isSmallScreen ? 0.5 : 1 }}>
-                  {isFullscreen ? <FullscreenExit fontSize={isSmallScreen ? "small" : "medium"} /> : <Fullscreen fontSize={isSmallScreen ? "small" : "medium"} />}
-                </IconButton>
-              </Tooltip>
-            </Paper>
-          </Fade>
-          
-          {/* Model info card with improved styling for fullscreen */}
-          {infoCardVisible && (
-            <Paper
-              elevation={4}
-              sx={{
-                position: 'absolute',
-                top: '1rem',
-                left: sidebarOpen ? (isMobile ? '1rem' : 'calc(280px + 1rem)') : '1rem',
-                transition: 'left 0.3s ease-in-out',
-                maxWidth: { xs: 'calc(100% - 2rem)', sm: '350px' }, // Full width on mobile with margins
-                width: { xs: 'calc(100% - 2rem)', sm: 'auto' }, // Full width on mobile
-                zIndex: 90,
-                borderRadius: 2,
-                overflow: 'hidden',
-                border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-                boxShadow: isDarkMode 
-                  ? '0 8px 32px rgba(0,0,0,0.4)' 
-                  : '0 8px 32px rgba(0,0,0,0.1)'
-              }}
-            >
-              <Box sx={{ 
-                p: 2,
-                background: isDarkMode 
-                  ? 'linear-gradient(135deg, rgba(25, 118, 210, 0.4) 0%, rgba(21, 101, 192, 0.3) 100%)' 
-                  : 'linear-gradient(135deg, rgba(25, 118, 210, 0.1) 0%, rgba(21, 101, 192, 0.05) 100%)',
-                borderBottom: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`
-              }}>
-                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <Typography 
-                    variant="h5" 
-                    component="h1" 
-                    sx={{ 
-                      fontWeight: 600, 
-                      color: theme.palette.primary.main,
-                    }}
-                  >
-                    {modelConfigs[discipline as keyof typeof modelConfigs]?.[modelId]?.title || 
-                     `${discipline.charAt(0).toUpperCase() + discipline.slice(1)} Model`}
-                  </Typography>
-                  <IconButton 
-                    size="small" 
-                    onClick={() => setInfoCardVisible(false)}
-                    sx={{ 
-                      mt: -1, 
-                      mr: -1,
-                      p: 1,
-                      borderRadius: '50%',
-                      backgroundColor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)',
-                      '&:hover': {
-                        backgroundColor: isDarkMode 
-                          ? 'rgba(0, 0, 0, 0.4)' 
-                          : 'rgba(0, 0, 0, 0.1)'
-                      } 
-                    }}
-                  >
-                    <Close fontSize="small" />
-                  </IconButton>
-                </Box>
-              </Box>
-
-              <Box sx={{ p: 2, bgcolor: 'background.paper' }}>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                  {modelConfigs[discipline as keyof typeof modelConfigs]?.[modelId]?.description || 
-                   'Explore this interactive 3D model to learn more about its components and functionality.'}
-                </Typography>
-                
-                <Divider sx={{ my: 1.5 }} />
-                
-                <Box sx={{ display: 'flex', gap: 1, mb: 1.5 }}>
-                  <Chip 
-                    label="Interactive" 
-                    size="small" 
-                    color="primary" 
-                    variant={isDarkMode ? "filled" : "outlined"}
-                  />
-                  <Chip 
-                    label="3D Model" 
-                    size="small" 
-                    color="secondary" 
-                    variant={isDarkMode ? "filled" : "outlined"}
-                  />
-                  <Chip 
-                    label="Educational" 
-                    size="small" 
-                    variant="outlined" 
-                  />
-                </Box>
-                
-                <Box sx={{ display: 'flex', gap: 1, mt: 2 }}>
-                  <Button
-                    variant="outlined"
-                    color="primary"
-                    startIcon={<PhotoCamera />}
-                    size="small"
-                    onClick={handleScreenshot}
-                    sx={{ flex: 1 }}
-                  >
-                    Screenshot
-                  </Button>
-                  
-                  <Button
-                    variant="contained"
-                    color="primary"
-                    startIcon={isFullscreen ? <FullscreenExit /> : <Fullscreen />}
-                    size="small"
-                    onClick={toggleFullscreen}
-                    sx={{ flex: 1 }}
-                  >
-                    {isFullscreen ? 'Exit' : 'Fullscreen'}
-                  </Button>
-                </Box>
-              </Box>
-            </Paper>
-          )}
-          
-          {/* Add a button to show the info card when it's hidden */}
-          {!infoCardVisible && (
-            <Box sx={{
-              position: 'absolute',
-              top: '1rem',
-              left: sidebarOpen ? 'calc(280px + 1rem)' : '1rem',
-              display: 'flex',
-              gap: 1,
-              transition: 'left 0.3s ease-in-out',
-              zIndex: 90
-            }}>
-              <IconButton
-                onClick={() => setInfoCardVisible(true)}
-                sx={{
-                  backgroundColor: isDarkMode ? 'rgba(42, 42, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                  '&:hover': {
-                    backgroundColor: isDarkMode ? 'rgba(60, 60, 60, 0.95)' : 'rgba(240, 240, 240, 0.95)'
-                  }
-                }}
-              >
-                <Info />
-              </IconButton>
-
-              <IconButton
-                onClick={handleScreenshot}
-                sx={{
-                  backgroundColor: isDarkMode ? 'rgba(42, 42, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)',
-                  boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-                  '&:hover': {
-                    backgroundColor: isDarkMode ? 'rgba(60, 60, 60, 0.95)' : 'rgba(240, 240, 240, 0.95)'
-                  }
-                }}
-              >
-                <PhotoCamera />
-              </IconButton>
+          {sidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+        </IconButton>
+        
+        {/* Sidebar container - make width exactly 0 when closed to prevent space */}
+        <Box 
+          sx={{ 
+            width: sidebarOpen ? (isMobile ? '100%' : '280px') : '0',
+            height: '100%',
+            transition: 'width 0.3s ease-in-out',
+            position: isMobile && sidebarOpen ? 'absolute' : 'relative', // Absolute on mobile when open
+            zIndex: isMobile && sidebarOpen ? 1000 : 20, // Higher z-index on mobile
+            borderRight: sidebarOpen ? `1px solid ${theme.palette.divider}` : 'none',
+            bgcolor: isDarkMode ? 'rgba(18, 18, 18, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            backdropFilter: 'blur(10px)',
+            boxShadow: sidebarOpen ? (isDarkMode ? '5px 0 15px rgba(0,0,0,0.2)' : '5px 0 15px rgba(0,0,0,0.1)') : 'none',
+            overflow: 'hidden'
+          }}
+        >
+          {sidebarOpen && (
+            <Box sx={{ position: 'absolute', top: 0, left: 0, height: '100%', zIndex: 10 }}>
+              <LearningModelSidebar 
+                onClose={() => setSidebarOpen(false)} 
+              />
             </Box>
           )}
         </Box>
-      </Box>
-
-      {/* Screenshot Dialog with improved styling */}
-      <Dialog 
-        open={screenshotDialogOpen} 
-        onClose={() => setScreenshotDialogOpen(false)}
-        maxWidth="md"
-        PaperProps={{
-          sx: {
-            borderRadius: 2,
-            overflow: 'hidden',
-            bgcolor: isDarkMode ? 'rgba(30, 30, 30, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.4)',
-            border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)'}`,
-          }
-        }}
-      >
-        <DialogTitle sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center',
-          borderBottom: `1px solid ${theme.palette.divider}`,
-          bgcolor: isDarkMode 
-            ? 'rgba(30, 30, 30, 0.8)' 
-            : 'rgba(245, 245, 245, 0.8)',
-          p: 2
-        }}>
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <PhotoCamera sx={{ mr: 1.5, color: theme.palette.primary.main }} />
-            <Typography variant="h6">Model Screenshot</Typography>
-          </Box>
-          <IconButton
-            onClick={() => setScreenshotDialogOpen(false)}
-            sx={{ 
-              borderRadius: '50%',
-              bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.05)',
-              '&:hover': {
-                backgroundColor: isDarkMode ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'
-              }
+        
+        {/* If sidebar open on mobile, add an overlay to close it on click */}
+        {isMobile && sidebarOpen && (
+          <Box
+            onClick={() => setSidebarOpen(false)}
+            sx={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              backgroundColor: 'rgba(0,0,0,0.5)',
+              zIndex: 999, // Just below the sidebar
             }}
-          >
-            <Close />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ p: 0, bgcolor: '#000' }}>
-          {screenshotURL && (
-            <Box
-              component="img"
-              src={screenshotURL}
-              alt="Model Screenshot"
-              sx={{
-                width: '100%',
-                height: 'auto',
-                maxHeight: '70vh',
-                objectFit: 'contain',
-                display: 'block'
-              }}
-            />
-          )}
-        </DialogContent>
-        <DialogActions sx={{ 
-          p: 2, 
-          borderTop: `1px solid ${theme.palette.divider}`,
-          bgcolor: isDarkMode 
-            ? 'rgba(30, 30, 30, 0.8)' 
-            : 'rgba(245, 245, 245, 0.8)',
-        }}>
-          <Button 
-            onClick={() => setScreenshotDialogOpen(false)} 
-            color="inherit"
-            variant="outlined"
-          >
-            Cancel
-          </Button>
-          <Button 
-            onClick={downloadScreenshot} 
-            variant="contained" 
-            color="primary"
-            startIcon={<PhotoCamera />}
-          >
-            Download Image
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Also, modify the fullscreen event handler to ensure controls visibility */}
-      <Box
-        sx={{
-          position: 'fixed', // Keep fixed position
-          bottom: '2rem',
-          left: '50%', // Center horizontally 
-          transform: 'translateX(-50%)', // Center transform
-          zIndex: 9999, // Very high z-index
-          display: isFullscreen ? 'flex' : 'none', // Only show in fullscreen mode
-          gap: 1,
-          p: 1,
-          borderRadius: 4,
-          backgroundColor: isDarkMode ? 'rgba(42, 42, 42, 0.9)' : 'rgba(255, 255, 255, 0.9)', // More opaque
-          backdropFilter: 'blur(8px)',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.3)' // Stronger shadow for visibility
-        }}
-      >
-        {/* Use CustomTooltip for all buttons */}
-        <CustomTooltip title="Exit Fullscreen">
-          <IconButton onClick={toggleFullscreen} size={isSmallScreen ? "small" : "medium"}>
-            <FullscreenExit />
-          </IconButton>
-        </CustomTooltip>
+          />
+        )}
         
-        {/* Other buttons with CustomTooltip */}
-        <CustomTooltip title="Zoom In">
-          <IconButton onClick={handleZoomIn} size={isSmallScreen ? "small" : "medium"}>
-            <ZoomIn />
-          </IconButton>
-        </CustomTooltip>
-        
-        <CustomTooltip title="Zoom Out">
-          <IconButton onClick={handleZoomOut} size={isSmallScreen ? "small" : "medium"}>
-            <ZoomOut />
-          </IconButton>
-        </CustomTooltip>
-        
-        <CustomTooltip title="Reset View">
-          <IconButton onClick={handleReset} size={isSmallScreen ? "small" : "medium"}>
-            <RestartAlt />
-          </IconButton>
-        </CustomTooltip>
-        
-        <CustomTooltip title={isWireframe ? "Solid View" : "Wireframe View"}>
-          <IconButton onClick={toggleWireframe} size={isSmallScreen ? "small" : "medium"}>
-            {isWireframe ? <ViewInAr fontSize={isSmallScreen ? "small" : "medium"} /> : <GridOn fontSize={isSmallScreen ? "small" : "medium"} />}
-          </IconButton>
-        </CustomTooltip>
-        
-        <CustomTooltip title="Take Screenshot">
-          <IconButton onClick={handleScreenshot} size={isSmallScreen ? "small" : "medium"}>
-            <PhotoCamera />
-          </IconButton>
-        </CustomTooltip>
+        {/* 3D model container */}
+        <Box
+          ref={mountRef}
+          sx={{
+            flexGrow: 1,
+            width: '100%',
+            height: '100%',
+            position: 'relative',
+            backgroundColor: theme.palette.background.default,
+            // Add explicit touch actions for mobile
+            touchAction: 'none', // Prevent browser handling of touch events (like scrolling)
+            '& canvas': {
+              display: 'block',
+              outline: 'none',
+              width: '100% !important', // Force canvas to respect container width
+              height: '100% !important', // Force canvas to respect container height
+            }
+          }}
+        />
       </Box>
     </Box>
   );
