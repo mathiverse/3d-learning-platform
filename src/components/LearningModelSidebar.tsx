@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Typography,
@@ -15,7 +15,10 @@ import {
   Tooltip,
   Badge,
   Chip,
-  Avatar
+  Avatar,
+  Tab,
+  Tabs,
+  TextField
 } from '@mui/material';
 import {
   ExpandLess,
@@ -29,9 +32,48 @@ import {
   PlayArrow,
   PeopleAlt,
   EmojiEvents,
-  Lightbulb
+  Lightbulb,
+  InfoOutlined,
+  AutoAwesome,
+  Engineering,
+  NoteAlt,
+  Link,
+  BarChart
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+
+interface ModelInfo {
+  id: string;
+  title: string;
+  description: string;
+  keyFeatures: string[];
+  applications: string[];
+  principles: ModelPrinciple[];
+  components: ModelComponent[];
+  funFacts: string[];
+  relatedModels: RelatedModel[];
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+}
+
+interface ModelComponent {
+  id: string;
+  name: string;
+  description: string;
+  highlightId?: string;
+}
+
+interface ModelPrinciple {
+  title: string;
+  description: string;
+  equation?: string;
+}
+
+interface RelatedModel {
+  id: string;
+  name: string;
+  discipline: string;
+  thumbnail?: string;
+}
 
 interface ModelSection {
   id: string;
@@ -216,23 +258,299 @@ const electricalSections: ModelSection[] = [
   }
 ];
 
+// Model info data for educational content
+const modelInfoData: Record<string, Record<string, ModelInfo>> = {
+  mechanical: {
+    'v8-engine': {
+      id: 'v8-engine',
+      title: 'V8 Engine',
+      description: 'A V8 engine is an eight-cylinder piston engine in which the cylinders share a common crankshaft and are arranged in a V configuration. This design offers a good balance of power, compactness, and smoothness.',
+      difficulty: 'intermediate',
+      keyFeatures: [
+        'Eight cylinders arranged in V-configuration',
+        'Higher power-to-weight ratio than inline engines',
+        'Typical displacement of 3.5 to 6.2 liters',
+        'Common in high-performance vehicles and trucks',
+        'Dual overhead camshafts for efficient valve control'
+      ],
+      applications: [
+        'Sports cars and high-performance vehicles',
+        'Luxury automobiles',
+        'Light trucks and SUVs',
+        'Some marine applications',
+        'Certain aircraft engines (modified versions)'
+      ],
+      principles: [
+        {
+          title: 'Internal Combustion',
+          description: 'Converts fuel energy into mechanical energy through controlled explosions within the cylinders.',
+          equation: 'P = (T × 2π × N) / 60'
+        },
+        {
+          title: 'Four-Stroke Cycle',
+          description: 'The engine operates on a four-stroke cycle: intake, compression, power, and exhaust.'
+        },
+        {
+          title: 'Thermodynamic Efficiency',
+          description: 'The theoretical efficiency of an Otto cycle engine depends on the compression ratio.',
+          equation: 'η = 1 - (1/r^(γ-1))'
+        }
+      ],
+      components: [
+        {
+          id: 'engine-block',
+          name: 'Engine Block',
+          description: 'The main structure that houses the cylinders and supports the crankshaft.',
+          highlightId: 'block'
+        },
+        {
+          id: 'pistons',
+          name: 'Pistons',
+          description: 'Cylindrical components that move up and down within the cylinders, transferring force from combustion to the crankshaft.',
+          highlightId: 'pistons'
+        },
+        {
+          id: 'crankshaft',
+          name: 'Crankshaft',
+          description: 'Converts the reciprocating motion of the pistons into rotational motion.',
+          highlightId: 'crankshaft'
+        },
+        {
+          id: 'camshafts',
+          name: 'Camshafts',
+          description: 'Control the opening and closing of the intake and exhaust valves.',
+          highlightId: 'camshafts'
+        }
+      ],
+      funFacts: [
+        'The first V8 engine was developed by Léon Levavasseur in 1902.',
+        'The Ford Flathead V8, introduced in 1932, was the first affordable V8 engine.',
+        'V8 engines typically produce a distinctive burbling sound due to their firing order.',
+        'Modern V8s can use cylinder deactivation to improve fuel efficiency.',
+        'The most powerful production V8 engines can produce over 700 horsepower.'
+      ],
+      relatedModels: [
+        {
+          id: 'four-stroke',
+          name: 'Four-Stroke Engine Cycle',
+          discipline: 'mechanical',
+          thumbnail: '/images/four-stroke-thumb.jpg'
+        },
+        {
+          id: 'transmission',
+          name: 'Automatic Transmission',
+          discipline: 'mechanical',
+          thumbnail: '/images/transmission-thumb.jpg'
+        }
+      ]
+    }
+  },
+  civil: {
+    'truss-bridge': {
+      id: 'truss-bridge',
+      title: 'Truss Bridge',
+      description: 'A truss bridge is a structure that uses connected elements forming triangular units to distribute load forces efficiently. These bridges can span longer distances than simple beam bridges and use materials economically.',
+      difficulty: 'intermediate',
+      keyFeatures: [
+        'Triangular structural units for optimal force distribution',
+        'Efficient use of materials with high strength-to-weight ratio',
+        'Various configurations: Pratt, Warren, Howe, and K-truss designs',
+        'Can span medium to long distances (40-500m)',
+        'Primarily resist forces through tension and compression'
+      ],
+      applications: [
+        'Railway bridges',
+        'Highway and road overpasses',
+        'Pedestrian crossings',
+        'Industrial facilities',
+        'Temporary military bridges'
+      ],
+      principles: [
+        {
+          title: 'Static Equilibrium',
+          description: 'All forces acting on the structure must balance for stability.',
+          equation: 'ΣF = 0, ΣM = 0'
+        },
+        {
+          title: 'Method of Joints',
+          description: 'Analytical technique to determine forces in truss members by analyzing force equilibrium at joints.'
+        },
+        {
+          title: 'Structural Efficiency',
+          description: 'Triangular forms create inherently stable structures that efficiently distribute loads.'
+        }
+      ],
+      components: [
+        {
+          id: 'chord-members',
+          name: 'Chord Members',
+          description: 'The top and bottom horizontal members that form the main structure of the truss.',
+          highlightId: 'chords'
+        },
+        {
+          id: 'vertical-members',
+          name: 'Vertical Members',
+          description: 'Upright elements connecting top and bottom chords, often under compression.',
+          highlightId: 'verticals'
+        },
+        {
+          id: 'diagonal-members',
+          name: 'Diagonal Members',
+          description: 'Slanted elements that provide triangulation and transfer loads between chords.',
+          highlightId: 'diagonals'
+        },
+        {
+          id: 'connections',
+          name: 'Connections',
+          description: 'Joints where members meet, typically bolted, riveted, or welded together.',
+          highlightId: 'joints'
+        }
+      ],
+      funFacts: [
+        'The first iron truss bridge was built in 1755 by Ulrich Grubenmann in Switzerland.',
+        'The Ikitsuki Bridge in Japan is the world\'s longest continuous truss bridge span at 400 meters.',
+        'During the 19th century, over 10,000 truss bridges were built in the United States.',
+        'The Quebec Bridge collapse in 1907 led to significant advances in structural engineering.',
+        'Many historic truss bridges are still in service after more than 100 years.'
+      ],
+      relatedModels: [
+        {
+          id: 'arch-bridge',
+          name: 'Arch Bridge',
+          discipline: 'civil',
+          thumbnail: '/images/arch-bridge-thumb.jpg'
+        },
+        {
+          id: 'suspension-bridge',
+          name: 'Suspension Bridge',
+          discipline: 'civil',
+          thumbnail: '/images/suspension-bridge-thumb.jpg'
+        }
+      ]
+    }
+  },
+  electrical: {
+    'transformer': {
+      id: 'transformer',
+      title: 'Power Transformer',
+      description: 'A power transformer is a static electrical device that transfers electrical energy between circuits through electromagnetic induction. It is fundamental to electrical power distribution and enables voltage level changes for efficient transmission.',
+      difficulty: 'intermediate',
+      keyFeatures: [
+        'No moving parts (static device)',
+        'Uses electromagnetic induction to transfer energy',
+        'Changes voltage levels while maintaining power (VA)',
+        'Consists of primary and secondary windings around a core',
+        'Operates on alternating current (AC) only'
+      ],
+      applications: [
+        'Power generation plants for step-up transmission',
+        'Electrical substations for voltage regulation',
+        'Distribution networks for residential/commercial supply',
+        'Industrial facilities for equipment power supply',
+        'Electronic devices for voltage conversion'
+      ],
+      principles: [
+        {
+          title: 'Electromagnetic Induction',
+          description: 'A changing magnetic field induces an electromotive force (voltage) in a conductor.',
+          equation: 'V₁/V₂ = N₁/N₂'
+        },
+        {
+          title: 'Mutual Inductance',
+          description: 'Current in one coil produces a magnetic field that induces voltage in another coil.'
+        },
+        {
+          title: 'Conservation of Energy',
+          description: 'Power input equals power output plus losses.',
+          equation: 'P₁ = P₂ + Losses'
+        }
+      ],
+      components: [
+        {
+          id: 'core',
+          name: 'Magnetic Core',
+          description: 'Provides a path for magnetic flux, usually made of laminated silicon steel sheets.',
+          highlightId: 'core'
+        },
+        {
+          id: 'primary-winding',
+          name: 'Primary Winding',
+          description: 'The input coil that receives electrical energy and creates a magnetic field.',
+          highlightId: 'primary'
+        },
+        {
+          id: 'secondary-winding',
+          name: 'Secondary Winding',
+          description: 'The output coil where voltage is induced by the changing magnetic field.',
+          highlightId: 'secondary'
+        },
+        {
+          id: 'insulation',
+          name: 'Insulation System',
+          description: 'Materials that prevent electrical contact between windings and core.',
+          highlightId: 'insulation'
+        }
+      ],
+      funFacts: [
+        'The first practical transformer was invented by William Stanley in 1885.',
+        'Modern power transformers can be over 98% efficient.',
+        'The largest power transformers can weigh over 400 tons.',
+        'Some transformers are immersed in oil for cooling and insulation.',
+        'Transformers make humming sounds due to magnetostriction in the core.'
+      ],
+      relatedModels: [
+        {
+          id: 'electric-motor',
+          name: 'Electric Motor',
+          discipline: 'electrical',
+          thumbnail: '/images/motor-thumb.jpg'
+        },
+        {
+          id: 'circuit-board',
+          name: 'Circuit Board',
+          discipline: 'electrical',
+          thumbnail: '/images/pcb-thumb.jpg'
+        }
+      ]
+    }
+  }
+};
+
 interface LearningModelSidebarProps {
   onClose: () => void;
   discipline?: string;
   modelId?: string;
+  onHighlightComponent?: (componentId: string | null) => void;
 }
 
 const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({ 
   onClose, 
   discipline = 'mechanical',
-  modelId = 'intro' 
+  modelId = 'v8-engine',
+  onHighlightComponent 
 }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const navigate = useNavigate();
-  const [expandedSections, setExpandedSections] = React.useState<string[]>([modelId]);
+  const [currentTab, setCurrentTab] = useState<number>(0);
+  const [userNotes, setUserNotes] = useState<string>('');
+  const [highlightedComponent, setHighlightedComponent] = useState<string | null>(null);
+  const [explorationMode, setExplorationMode] = useState<boolean>(false);
 
-  // Get sections based on discipline
+  // Get model info based on discipline and modelId
+  const getModelInfo = (): ModelInfo | undefined => {
+    if (modelInfoData[discipline] && modelInfoData[discipline][modelId]) {
+      return modelInfoData[discipline][modelId];
+    }
+    
+    // Fallback to first available model
+    const firstModel = Object.keys(modelInfoData[discipline] || {})[0];
+    return modelInfoData[discipline]?.[firstModel];
+  };
+  
+  const modelInfo = getModelInfo();
+
+  // Get sections based on discipline (for backward compatibility)
   const getSections = (disciplineName: string): ModelSection[] => {
     switch (disciplineName) {
       case 'mechanical':
@@ -246,17 +564,27 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
     }
   };
 
-  const handleSectionClick = (sectionId: string) => {
-    setExpandedSections(prev => 
-      prev.includes(sectionId) 
-        ? prev.filter(id => id !== sectionId) 
-        : [...prev, sectionId]
-    );
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
+    setCurrentTab(newValue);
   };
 
-  const handleModelClick = (disciplineName: string, sectionId: string) => {
-    navigate(`/model/${disciplineName}/${sectionId}`);
-    if (onClose) onClose();
+  const handleComponentClick = (componentId: string) => {
+    const newHighlightedId = highlightedComponent === componentId ? null : componentId;
+    setHighlightedComponent(newHighlightedId);
+    if (onHighlightComponent) {
+      const highlightId = newHighlightedId === null 
+        ? null 
+        : modelInfo?.components.find(c => c.id === newHighlightedId)?.highlightId || null;
+      onHighlightComponent(highlightId);
+    }
+  };
+
+  const handleExplorationToggle = () => {
+    setExplorationMode(!explorationMode);
+  };
+
+  const handleNoteChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setUserNotes(event.target.value);
   };
 
   const getDifficultyColor = (difficulty: string | undefined) => {
@@ -274,26 +602,36 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
     }
   };
 
-  const getContentTypeIcon = (type: string | undefined) => {
-    if (!type) return null;
+  // Fallback if no model info is available
+  if (!modelInfo) {
+    const sections = getSections(discipline);
+    const currentSection = sections.find(section => section.id === modelId);
     
-    switch (type) {
-      case 'video':
-        return <PlayArrow fontSize="small" />;
-      case 'reading':
-        return <MenuBook fontSize="small" />;
-      case 'quiz':
-        return <Quiz fontSize="small" />;
-      case 'interactive':
-        return <Lightbulb fontSize="small" />;
-      default:
-        return null;
-    }
-  };
-
-  const sections = getSections(discipline);
-  const currentSection = sections.find(section => section.id === modelId);
-
+    return (
+      <Box
+        sx={{
+          width: '100%',
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+          overflow: 'hidden',
+          backgroundColor: isDarkMode ? 'background.paper' : '#fff',
+          borderRight: `1px solid ${theme.palette.divider}`
+        }}
+      >
+        <Box sx={{ p: 3, textAlign: 'center' }}>
+          <Typography variant="h6">Model Information Unavailable</Typography>
+          <Typography variant="body2" sx={{ mt: 2 }}>
+            Educational content for this model is under development.
+          </Typography>
+          <Button variant="outlined" onClick={onClose} sx={{ mt: 3 }}>
+            Close
+          </Button>
+        </Box>
+      </Box>
+    );
+  }
+  
   return (
     <Box
       sx={{
@@ -306,25 +644,29 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         borderRight: `1px solid ${theme.palette.divider}`
       }}
     >
-      {/* Header with discipline and stats */}
+      {/* Header with title and close button */}
       <Paper 
         elevation={0} 
         sx={{ 
           p: 2, 
           borderBottom: `1px solid ${theme.palette.divider}`,
-          bgcolor: isDarkMode ? 'background.paper' : theme.palette.primary.light 
+          bgcolor: isDarkMode 
+            ? 'background.paper' 
+            : theme.palette.primary.light,
+          position: 'sticky',
+          top: 0,
+          zIndex: 1
         }}
       >
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'center', 
-          mb: 1 
+          alignItems: 'center' 
         }}>
           <Typography variant="h6" fontWeight="600" sx={{ 
             color: isDarkMode ? 'text.primary' : '#fff'
           }}>
-            {discipline.charAt(0).toUpperCase() + discipline.slice(1)} Learning
+            {modelInfo.title}
           </Typography>
           <IconButton size="small" onClick={onClose} sx={{ 
             color: isDarkMode ? 'text.primary' : '#fff'
@@ -332,328 +674,406 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Close fontSize="small" />
           </IconButton>
         </Box>
-
-        {/* Learning stats */}
-        <Box sx={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          mt: 2,
-          p: 1,
-          borderRadius: 1,
-          bgcolor: isDarkMode ? 'rgba(0,0,0,0.1)' : 'rgba(255,255,255,0.2)'
-        }}>
-          <Tooltip title="Completed modules">
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Badge 
-                badgeContent={<Check sx={{ fontSize: 8 }} />} 
-                color="success" 
-                sx={{ 
-                  '& .MuiBadge-badge': { 
-                    height: 14, 
-                    width: 14, 
-                    minWidth: 14 
-                  } 
-                }}
-              >
-                <Avatar sx={{ 
-                  bgcolor: isDarkMode ? 'primary.dark' : 'primary.dark',
-                  width: 28,
-                  height: 28
-                }}>
-                  <School sx={{ fontSize: 16 }} />
-                </Avatar>
-              </Badge>
-              <Typography variant="caption" sx={{ mt: 0.5, color: isDarkMode ? 'text.primary' : '#fff' }}>
-                2/4
-              </Typography>
-            </Box>
-          </Tooltip>
-          
-          <Tooltip title="Learning time">
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Avatar sx={{ 
-                bgcolor: isDarkMode ? 'primary.dark' : 'primary.dark',
-                width: 28,
-                height: 28
-              }}>
-                <Assignment sx={{ fontSize: 16 }} />
-              </Avatar>
-              <Typography variant="caption" sx={{ mt: 0.5, color: isDarkMode ? 'text.primary' : '#fff' }}>
-                110min
-              </Typography>
-            </Box>
-          </Tooltip>
-          
-          <Tooltip title="Students enrolled">
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Avatar sx={{ 
-                bgcolor: isDarkMode ? 'primary.dark' : 'primary.dark',
-                width: 28,
-                height: 28
-              }}>
-                <PeopleAlt sx={{ fontSize: 16 }} />
-              </Avatar>
-              <Typography variant="caption" sx={{ mt: 0.5, color: isDarkMode ? 'text.primary' : '#fff' }}>
-                1.2k
-              </Typography>
-            </Box>
-          </Tooltip>
-          
-          <Tooltip title="Achievements">
-            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-              <Badge 
-                badgeContent="1" 
-                color="error"
-                sx={{ 
-                  '& .MuiBadge-badge': { 
-                    height: 14, 
-                    minWidth: 14 
-                  } 
-                }}
-              >
-                <Avatar sx={{ 
-                  bgcolor: isDarkMode ? 'primary.dark' : 'primary.dark',
-                  width: 28,
-                  height: 28 
-                }}>
-                  <EmojiEvents sx={{ fontSize: 16 }} />
-                </Avatar>
-              </Badge>
-              <Typography variant="caption" sx={{ mt: 0.5, color: isDarkMode ? 'text.primary' : '#fff' }}>
-                3
-              </Typography>
-            </Box>
-          </Tooltip>
-        </Box>
+        
+        <Chip 
+          label={modelInfo.difficulty.charAt(0).toUpperCase() + modelInfo.difficulty.slice(1)} 
+          size="small"
+          sx={{
+            mt: 1,
+            bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)',
+            color: getDifficultyColor(modelInfo.difficulty),
+            borderColor: getDifficultyColor(modelInfo.difficulty),
+            border: '1px solid',
+            fontWeight: 500
+          }}
+        />
       </Paper>
 
-      {/* Current model info */}
-      {currentSection && (
-        <Box sx={{ 
-          p: 2, 
+      {/* Tabs */}
+      <Tabs 
+        value={currentTab} 
+        onChange={handleTabChange} 
+        variant="fullWidth"
+        sx={{
           borderBottom: `1px solid ${theme.palette.divider}`,
-          bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(25,118,210,0.04)'
-        }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {currentSection.title}
-          </Typography>
-          
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 2 }}>
-            {currentSection.difficulty && (
-              <Chip 
-                label={currentSection.difficulty.charAt(0).toUpperCase() + currentSection.difficulty.slice(1)} 
-                size="small"
-                sx={{
-                  bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)',
-                  color: getDifficultyColor(currentSection.difficulty),
-                  borderColor: getDifficultyColor(currentSection.difficulty),
-                  border: '1px solid'
-                }}
-              />
-            )}
-            
-            {currentSection.learningTime && (
-              <Chip 
-                label={currentSection.learningTime} 
-                size="small"
-                icon={<Assignment fontSize="small" />}
-                variant="outlined"
-              />
-            )}
-          </Box>
-          
-          <Typography variant="body2" color="text.secondary">
-            {currentSection.description}
-          </Typography>
-          
-          <LinearProgress 
-            variant="determinate" 
-            value={currentSection.progress} 
-            sx={{ 
-              mt: 2,
-              height: 8, 
-              borderRadius: 5,
-              bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
-            }}
-          />
-          
-          <Box sx={{ display: 'flex', justifyContent: 'space-between', mt: 0.5 }}>
-            <Typography variant="caption" color="text.secondary">Progress</Typography>
-            <Typography variant="caption" color="text.secondary">{currentSection.progress}%</Typography>
-          </Box>
-        </Box>
-      )}
-      
-      {/* Learning modules list */}
+          '& .MuiTab-root': {
+            minHeight: 48
+          }
+        }}
+      >
+        <Tab 
+          label="About" 
+          icon={<InfoOutlined fontSize="small" />} 
+          iconPosition="start"
+        />
+        <Tab 
+          label="Components" 
+          icon={<Engineering fontSize="small" />} 
+          iconPosition="start"
+        />
+        <Tab 
+          label="Notes" 
+          icon={<NoteAlt fontSize="small" />} 
+          iconPosition="start"
+        />
+      </Tabs>
+
+      {/* Content Area */}
       <Box sx={{ 
         overflow: 'auto', 
-        flexGrow: 1, 
-        p: 2,
-        display: 'flex',
-        flexDirection: 'column',
-        gap: 1,
-        maxHeight: 'calc(100vh - 270px)'
+        flexGrow: 1,
+        p: 0,
+        maxHeight: 'calc(100vh - 170px)'
       }}>
-        <Typography variant="subtitle2" color="text.secondary" sx={{ mb: 1, ml: 1 }}>
-          LEARNING MODULES
-        </Typography>
-        
-        <List component="nav" aria-label="learning models" dense sx={{ p: 0 }}>
-          {sections.map(section => (
-            <Paper
-              key={section.id}
-              elevation={0}
-              sx={{
-                mb: 1.5,
-                overflow: 'hidden',
-                borderRadius: 2,
-                border: section.id === modelId ? 
-                  `1px solid ${theme.palette.primary.main}` : 
-                  `1px solid ${theme.palette.divider}`
+        {/* About Tab */}
+        {currentTab === 0 && (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="body1" paragraph>
+              {modelInfo.description}
+            </Typography>
+            
+            {/* Key Features */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                borderRadius: 2
               }}
             >
-              <ListItem 
-                button 
-                onClick={() => section.subsections ? handleSectionClick(section.id) : handleModelClick(discipline, section.id)}
-                selected={section.id === modelId}
-                sx={{
-                  borderLeft: section.id === modelId ? 
-                    `4px solid ${theme.palette.primary.main}` : 
-                    'none',
-                  bgcolor: section.id === modelId ? 
-                    (isDarkMode ? 'rgba(25,118,210,0.15)' : 'rgba(25,118,210,0.08)') : 
-                    'transparent',
-                  py: 1.5,
-                  '&:hover': {
-                    bgcolor: isDarkMode ? 'rgba(25,118,210,0.1)' : 'rgba(25,118,210,0.05)'
-                  }
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                color: theme.palette.primary.main
+              }}>
+                <InfoOutlined fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Key Features
+                </Typography>
+              </Box>
+              <List dense disablePadding>
+                {modelInfo.keyFeatures.map((feature, index) => (
+                  <ListItem key={index} sx={{ py: 0.5 }}>
+                    <ListItemText 
+                      primary={
+                        <Typography variant="body2">• {feature}</Typography>
+                      } 
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+            
+            {/* Applications */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                color: theme.palette.success.main
+              }}>
+                <BarChart fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Applications
+                </Typography>
+              </Box>
+              <List dense disablePadding>
+                {modelInfo.applications.map((application, index) => (
+                  <ListItem key={index} sx={{ py: 0.5 }}>
+                    <ListItemText 
+                      primary={
+                        <Typography variant="body2">• {application}</Typography>
+                      } 
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+            
+            {/* Engineering Principles */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                color: theme.palette.warning.main
+              }}>
+                <School fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Engineering Principles
+                </Typography>
+              </Box>
+              {modelInfo.principles.map((principle, index) => (
+                <Box key={index} sx={{ mb: 2 }}>
+                  <Typography variant="subtitle2" fontWeight={500}>
+                    {principle.title}
+                  </Typography>
+                  <Typography variant="body2" paragraph sx={{ mt: 0.5 }}>
+                    {principle.description}
+                  </Typography>
+                  {principle.equation && (
+                    <Paper 
+                      elevation={0} 
+                      sx={{ 
+                        p: 1, 
+                        backgroundColor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+                        borderRadius: 1,
+                        display: 'flex',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      <Typography 
+                        variant="body2" 
+                        sx={{ 
+                          fontFamily: 'monospace',
+                          fontWeight: 500 
+                        }}
+                      >
+                        {principle.equation}
+                      </Typography>
+                    </Paper>
+                  )}
+                </Box>
+              ))}
+            </Paper>
+            
+            {/* Fun Facts */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                color: theme.palette.info.main
+              }}>
+                <Lightbulb fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Fun Facts
+                </Typography>
+              </Box>
+              <List dense disablePadding>
+                {modelInfo.funFacts.map((fact, index) => (
+                  <ListItem key={index} sx={{ py: 0.5 }}>
+                    <ListItemText 
+                      primary={
+                        <Typography variant="body2">• {fact}</Typography>
+                      } 
+                    />
+                  </ListItem>
+                ))}
+              </List>
+            </Paper>
+            
+            {/* Related Models */}
+            <Paper 
+              elevation={0} 
+              sx={{ 
+                p: 2, 
+                mb: 3, 
+                bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                borderRadius: 2
+              }}
+            >
+              <Box sx={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                mb: 1,
+                color: theme.palette.primary.main
+              }}>
+                <Link fontSize="small" sx={{ mr: 1 }} />
+                <Typography variant="subtitle1" fontWeight={600}>
+                  Related Models
+                </Typography>
+              </Box>
+              <Box sx={{ 
+                display: 'flex', 
+                flexWrap: 'wrap', 
+                gap: 1, 
+                mt: 1 
+              }}>
+                {modelInfo.relatedModels.map((relatedModel, index) => (
+                  <Chip
+                    key={index}
+                    label={relatedModel.name}
+                    onClick={() => navigate(`/model/${relatedModel.discipline}/${relatedModel.id}`)}
+                    sx={{
+                      cursor: 'pointer',
+                      '&:hover': {
+                        bgcolor: theme.palette.primary.light,
+                        color: '#fff'
+                      }
+                    }}
+                  />
+                ))}
+              </Box>
+            </Paper>
+          </Box>
+        )}
+        
+        {/* Components Tab */}
+        {currentTab === 1 && (
+          <Box sx={{ p: 2 }}>
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center', 
+              mb: 2 
+            }}>
+              <Typography variant="subtitle1" fontWeight={600}>
+                Model Components
+              </Typography>
+              <Tooltip title={explorationMode ? "Exit exploration mode" : "Explore the model"}>
+                <Button
+                  size="small"
+                  startIcon={<AutoAwesome fontSize="small" />}
+                  onClick={handleExplorationToggle}
+                  variant={explorationMode ? "contained" : "outlined"}
+                  color={explorationMode ? "secondary" : "primary"}
+                >
+                  {explorationMode ? "Exit Exploration" : "Start Exploration"}
+                </Button>
+              </Tooltip>
+            </Box>
+            
+            {explorationMode && (
+              <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
+                Click on any component below to highlight it in the 3D model. Click again to remove the highlight.
+              </Typography>
+            )}
+            
+            <List sx={{ pt: 0 }}>
+              {modelInfo.components.map((component) => (
+                <Paper
+                  key={component.id}
+                  elevation={0}
+                  sx={{
+                    mb: 2,
+                    overflow: 'hidden',
+                    borderRadius: 2,
+                    border: highlightedComponent === component.id ? 
+                      `2px solid ${theme.palette.primary.main}` : 
+                      `1px solid ${theme.palette.divider}`,
+                    cursor: explorationMode ? 'pointer' : 'default',
+                    transition: 'all 0.2s ease',
+                    '&:hover': explorationMode ? {
+                      borderColor: theme.palette.primary.main,
+                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                    } : {}
+                  }}
+                  onClick={explorationMode ? () => handleComponentClick(component.id) : undefined}
+                >
+                  <ListItem sx={{ py: 1.5 }}>
+                    <ListItemText
+                      primary={
+                        <Typography variant="subtitle2" fontWeight={500}>
+                          {component.name}
+                        </Typography>
+                      }
+                      secondary={
+                        <Typography variant="body2" sx={{ mt: 0.5 }}>
+                          {component.description}
+                        </Typography>
+                      }
+                    />
+                  </ListItem>
+                </Paper>
+              ))}
+            </List>
+          </Box>
+        )}
+        
+        {/* Notes Tab */}
+        {currentTab === 2 && (
+          <Box sx={{ p: 2 }}>
+            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+              Your Notes
+            </Typography>
+            <TextField
+              multiline
+              fullWidth
+              minRows={8}
+              maxRows={15}
+              placeholder="Take notes about this model here..."
+              value={userNotes}
+              onChange={handleNoteChange}
+              variant="outlined"
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                }
+              }}
+            />
+            <Box sx={{ 
+              display: 'flex', 
+              justifyContent: 'flex-end', 
+              mt: 2, 
+              gap: 1 
+            }}>
+              <Button 
+                variant="outlined" 
+                size="small"
+                onClick={() => setUserNotes('')}
+              >
+                Clear
+              </Button>
+              <Button 
+                variant="contained" 
+                size="small"
+                onClick={() => {
+                  // In a real app, we would save the notes to a database
+                  alert('Notes saved!');
                 }}
               >
-                <Box sx={{ 
-                  mr: 2, 
-                  color: getDifficultyColor(section.difficulty),
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  borderRadius: '50%',
-                  width: 32,
-                  height: 32,
-                  bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(255,255,255,0.8)',
-                }}>
-                  {section.icon}
-                </Box>
-                <ListItemText 
-                  primary={
-                    <Typography 
-                      variant="body1" 
-                      fontWeight={section.id === modelId ? 600 : 400}
-                    >
-                      {section.title}
-                    </Typography>
-                  } 
-                  secondary={
-                    <Box sx={{ display: 'flex', alignItems: 'center', mt: 0.5 }}>
-                      <LinearProgress 
-                        variant="determinate" 
-                        value={section.progress} 
-                        sx={{ 
-                          width: 80,
-                          height: 4, 
-                          borderRadius: 5, 
-                          mr: 1,
-                          bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
-                        }}
-                      />
-                      <Typography variant="caption" color="text.secondary">
-                        {section.progress}%
-                      </Typography>
-                    </Box>
-                  }
-                />
-                {section.subsections && (
-                  expandedSections.includes(section.id) ? <ExpandLess /> : <ExpandMore />
-                )}
-              </ListItem>
-              
-              {section.subsections && (
-                <Collapse in={expandedSections.includes(section.id)} timeout="auto" unmountOnExit>
-                  <List component="div" disablePadding>
-                    {section.subsections.map(subsection => (
-                      <ListItem 
-                        key={subsection.id} 
-                        button 
-                        sx={{ 
-                          pl: 4,
-                          py: 1,
-                          bgcolor: isDarkMode ? 
-                            'rgba(0,0,0,0.2)' : 
-                            'rgba(0,0,0,0.02)'
-                        }}
-                        onClick={() => handleModelClick(discipline, section.id)}
-                      >
-                        <Box sx={{ 
-                          display: 'flex', 
-                          alignItems: 'center',
-                          color: subsection.completed ? theme.palette.success.main : 'text.primary',
-                          mr: 1.5
-                        }}>
-                          {subsection.completed ? 
-                            <Check fontSize="small" /> : 
-                            getContentTypeIcon(subsection.type)}
-                        </Box>
-                        <ListItemText 
-                          primary={
-                            <Typography 
-                              variant="body2" 
-                              sx={{ 
-                                textDecoration: subsection.completed ? 'line-through' : 'none',
-                                color: subsection.completed ? 'text.secondary' : 'text.primary'
-                              }}
-                            >
-                              {subsection.title}
-                            </Typography>
-                          } 
-                        />
-                        <Box sx={{ width: 40 }}>
-                          <LinearProgress 
-                            variant="determinate" 
-                            value={subsection.progress} 
-                            sx={{ 
-                              height: 4, 
-                              borderRadius: 4,
-                              bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.05)'
-                            }}
-                          />
-                        </Box>
-                      </ListItem>
-                    ))}
-                  </List>
-                </Collapse>
-              )}
-            </Paper>
-          ))}
-        </List>
+                Save Notes
+              </Button>
+            </Box>
+          </Box>
+        )}
       </Box>
       
       {/* Footer action buttons */}
-      <Box sx={{ 
-        p: 2, 
-        display: 'flex', 
-        gap: 1,
-        borderTop: `1px solid ${theme.palette.divider}`,
-      }}>
-        <Button 
-          variant="contained" 
-          fullWidth
-          startIcon={<PlayArrow />}
-          onClick={() => {
-            // In a real implementation, this would start the current module's interactive lesson
-            alert('Starting interactive lesson mode');
-          }}
-        >
-          Start Interactive Lesson
-        </Button>
-      </Box>
+      {currentTab === 0 && (
+        <Box sx={{ 
+          p: 2, 
+          display: 'flex', 
+          gap: 1,
+          borderTop: `1px solid ${theme.palette.divider}`,
+        }}>
+          <Button 
+            variant="contained" 
+            fullWidth
+            startIcon={<AutoAwesome />}
+            onClick={handleExplorationToggle}
+          >
+            Start Interactive Exploration
+          </Button>
+        </Box>
+      )}
     </Box>
   );
 };
