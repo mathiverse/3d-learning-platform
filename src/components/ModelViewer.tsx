@@ -293,9 +293,37 @@ const ModelViewer: React.FC = () => {
     setIsLoading(true);
     setLoadingProgress(0);
     
-    // Create the scene
+    // Create the scene with improved background color for dark mode
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(isDarkMode ? 0x1a2035 : 0xf5f5f5);
+    
+    // Use a subtle gradient blue-purple for dark mode, light gray for light mode
+    if (isDarkMode) {
+      // Create gradient background for dark mode
+      const canvas = document.createElement('canvas');
+      canvas.width = 2;
+      canvas.height = 2;
+      
+      const context = canvas.getContext('2d');
+      if (context) {
+        // Create subtle gradient from dark blue to dark purple
+        const gradient = context.createLinearGradient(0, 0, 0, 2);
+        gradient.addColorStop(0, '#1a1a2e'); // Dark blue
+        gradient.addColorStop(1, '#202040'); // Dark purple tint
+        
+        context.fillStyle = gradient;
+        context.fillRect(0, 0, 2, 2);
+        
+        const texture = new THREE.CanvasTexture(canvas);
+        scene.background = texture;
+      } else {
+        // Fallback if context not available
+        scene.background = new THREE.Color('#1a1a2e');
+      }
+    } else {
+      // Light mode background
+      scene.background = new THREE.Color(0xf5f5f5);
+    }
+    
     sceneRef.current = scene;
     
     // Create the camera - position it further away and at an angle for better viewing
@@ -497,7 +525,7 @@ const ModelViewer: React.FC = () => {
         <Box
           sx={{
             height: '100%',
-            width: isSidebarOpen ? 300 : 0,
+            width: isSidebarOpen ? (isMobile ? 260 : 300) : 0,
             transition: 'width 0.3s ease',
             overflow: 'hidden',
             zIndex: 10,
@@ -619,7 +647,7 @@ const ModelViewer: React.FC = () => {
                 bgcolor: 'rgba(255, 255, 255, 0.9)',
                 backdropFilter: 'blur(5px)',
                 ...(!isDarkMode ? {} : {
-                  bgcolor: 'rgba(30, 30, 30, 0.9)',
+                  bgcolor: 'rgba(26, 26, 46, 0.85)',
                 })
               }}
             >
@@ -649,13 +677,13 @@ const ModelViewer: React.FC = () => {
             elevation={6}
             sx={{
               position: 'absolute',
-              bottom: 30,
+              bottom: isMobile ? 20 : 30,
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
               alignItems: 'center',
-              gap: 1,
-              p: 1.5,
+              gap: isMobile ? 0.5 : 1,
+              p: isMobile ? 1 : 1.5,
               borderRadius: 10,
               bgcolor: isDarkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
               backdropFilter: 'blur(8px)',
@@ -671,8 +699,8 @@ const ModelViewer: React.FC = () => {
           >
             <CustomTooltip title="Reset View">
               <IconButton 
-                onClick={() => switchCamera('default')}
-                size="medium"
+                onClick={handleReset}
+                size={isMobile ? "small" : "medium"}
                 color="primary"
                 sx={{ 
                   bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)', 
@@ -686,7 +714,7 @@ const ModelViewer: React.FC = () => {
             <CustomTooltip title="Zoom Out">
               <IconButton 
                 onClick={handleZoomOut} 
-                size="medium"
+                size={isMobile ? "small" : "medium"}
                 color="primary"
                 sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
               >
@@ -697,7 +725,7 @@ const ModelViewer: React.FC = () => {
             <CustomTooltip title="Zoom In">
               <IconButton 
                 onClick={handleZoomIn} 
-                size="medium"
+                size={isMobile ? "small" : "medium"}
                 color="primary"
                 sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
               >
@@ -710,11 +738,24 @@ const ModelViewer: React.FC = () => {
             <CustomTooltip title={isWireframe ? "Solid Mode" : "Wireframe Mode"}>
               <IconButton 
                 onClick={toggleWireframe} 
-                size="medium"
+                size={isMobile ? "small" : "medium"}
                 color={isWireframe ? "secondary" : "primary"}
-                sx={{ bgcolor: isWireframe ? 
-                  (isDarkMode ? 'rgba(245,0,87,0.15)' : 'rgba(245,0,87,0.1)') : 
-                  (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)') 
+                sx={{ 
+                  position: 'relative',
+                  bgcolor: isWireframe ? 
+                    (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.15)') : 
+                    (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)'),
+                  '&::after': isWireframe ? {
+                    content: '""',
+                    position: 'absolute',
+                    top: -4,
+                    right: -4,
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: 'secondary.main',
+                    animation: 'pulse 1.5s infinite'
+                  } : {}
                 }}
               >
                 <GridOn />
@@ -724,7 +765,7 @@ const ModelViewer: React.FC = () => {
             <CustomTooltip title="Take Screenshot">
               <IconButton 
                 onClick={handleScreenshot} 
-                size="medium"
+                size={isMobile ? "small" : "medium"}
                 color="primary"
                 sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
               >
@@ -737,15 +778,15 @@ const ModelViewer: React.FC = () => {
             <CustomTooltip title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
               <IconButton 
                 onClick={toggleFullscreen} 
-                size="medium"
+                size={isMobile ? "small" : "medium"}
                 color={isFullscreen ? "secondary" : "primary"}
                 sx={{ 
                   bgcolor: isFullscreen ? 
-                    (isDarkMode ? 'rgba(245,0,87,0.15)' : 'rgba(245,0,87,0.1)') : 
+                    (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.15)') : 
                     (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)'),
                   '&:hover': {
                     bgcolor: isFullscreen ? 
-                      (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.2)') : 
+                      (isDarkMode ? 'rgba(245,0,87,0.35)' : 'rgba(245,0,87,0.25)') : 
                       (isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(25,118,210,0.2)')
                   }
                 }}
@@ -755,6 +796,23 @@ const ModelViewer: React.FC = () => {
             </CustomTooltip>
           </Paper>
         </Fade>
+
+        {/* Add pulse animation for active toggles */}
+        <Box
+          sx={{
+            '@keyframes pulse': {
+              '0%': {
+                boxShadow: '0 0 0 0 rgba(245, 0, 87, 0.7)'
+              },
+              '70%': {
+                boxShadow: '0 0 0 6px rgba(245, 0, 87, 0)'
+              },
+              '100%': {
+                boxShadow: '0 0 0 0 rgba(245, 0, 87, 0)'
+              }
+            }
+          }}
+        />
 
         {/* Screenshot Dialog */}
         <Dialog 
