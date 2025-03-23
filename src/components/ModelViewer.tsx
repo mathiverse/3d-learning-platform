@@ -148,6 +148,7 @@ const ModelViewer: React.FC = () => {
   const controlsRef = useRef<OrbitControls | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const fullscreenContainerRef = useRef<HTMLDivElement>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
   const [currentCamera, setCurrentCamera] = useState('default');
   const [lightIntensity, setLightIntensity] = useState(0.7);
@@ -207,14 +208,61 @@ const ModelViewer: React.FC = () => {
     }
   };
 
-  // Fullscreen toggle
+  // Fullscreen toggle with Browser API
   const toggleFullscreen = () => {
-    setIsFullscreen(prev => !prev);
+    if (!document.fullscreenElement && fullscreenContainerRef.current) {
+      // Enter fullscreen
+      if (fullscreenContainerRef.current.requestFullscreen) {
+        fullscreenContainerRef.current.requestFullscreen()
+          .then(() => setIsFullscreen(true))
+          .catch(err => console.error(`Error attempting to enable fullscreen: ${err.message}`));
+      } else if ((fullscreenContainerRef.current as any).webkitRequestFullscreen) { // Safari
+        (fullscreenContainerRef.current as any).webkitRequestFullscreen();
+        setIsFullscreen(true);
+      } else if ((fullscreenContainerRef.current as any).msRequestFullscreen) { // IE11
+        (fullscreenContainerRef.current as any).msRequestFullscreen();
+        setIsFullscreen(true);
+      }
+    } else {
+      // Exit fullscreen
+      if (document.exitFullscreen) {
+        document.exitFullscreen()
+          .then(() => setIsFullscreen(false))
+          .catch(err => console.error(`Error attempting to exit fullscreen: ${err.message}`));
+      } else if ((document as any).webkitExitFullscreen) { // Safari
+        (document as any).webkitExitFullscreen();
+        setIsFullscreen(false);
+      } else if ((document as any).msExitFullscreen) { // IE11
+        (document as any).msExitFullscreen();
+        setIsFullscreen(false);
+      }
+    }
   };
+
+  // Listen for fullscreen change events to update state accordingly
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', handleFullscreenChange); // Safari
+    document.addEventListener('mozfullscreenchange', handleFullscreenChange); // Firefox
+    document.addEventListener('MSFullscreenChange', handleFullscreenChange); // IE11
+
+    return () => {
+      document.removeEventListener('fullscreenchange', handleFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('mozfullscreenchange', handleFullscreenChange);
+      document.removeEventListener('MSFullscreenChange', handleFullscreenChange);
+    };
+  }, []);
 
   // Toggle wireframe mode
   const toggleWireframe = () => {
-    setIsWireframe(prev => !prev);
+    // Store the new wireframe state value to use in this function
+    const newWireframeState = !isWireframe;
+    setIsWireframe(newWireframeState);
     
     if (sceneRef.current) {
       sceneRef.current.traverse((child) => {
@@ -223,11 +271,11 @@ const ModelViewer: React.FC = () => {
           if (Array.isArray(child.material)) {
             child.material.forEach(mat => {
               // Use type assertion to access wireframe property
-              (mat as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.MeshPhongMaterial).wireframe = !isWireframe;
+              (mat as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.MeshPhongMaterial).wireframe = newWireframeState;
             });
           } else {
             // Use type assertion to access wireframe property
-            (child.material as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.MeshPhongMaterial).wireframe = !isWireframe;
+            (child.material as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.MeshPhongMaterial).wireframe = newWireframeState;
           }
         }
       });
@@ -247,7 +295,7 @@ const ModelViewer: React.FC = () => {
     
     // Create the scene
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(isDarkMode ? 0x121212 : 0xf5f5f5);
+    scene.background = new THREE.Color(isDarkMode ? 0x1a2035 : 0xf5f5f5);
     sceneRef.current = scene;
     
     // Create the camera - position it further away and at an angle for better viewing
@@ -444,29 +492,32 @@ const ModelViewer: React.FC = () => {
         bgcolor: 'background.default'
       }}>
       
-      {/* Sidebar */}
-      <Box
-        sx={{
-          height: '100%',
-          width: isSidebarOpen ? 300 : 0,
-          transition: 'width 0.3s ease',
-          overflow: 'hidden',
-          zIndex: 10,
-          boxShadow: isSidebarOpen ? '4px 0px 10px rgba(0, 0, 0, 0.1)' : 'none',
-          bgcolor: theme.palette.background.paper
-        }}
-      >
-        {isSidebarOpen && (
-          <LearningModelSidebar
-            onClose={toggleSidebar}
-            discipline={discipline}
-            modelId={modelId}
-          />
-        )}
-      </Box>
+      {/* Sidebar - hide in fullscreen mode */}
+      {!isFullscreen && (
+        <Box
+          sx={{
+            height: '100%',
+            width: isSidebarOpen ? 300 : 0,
+            transition: 'width 0.3s ease',
+            overflow: 'hidden',
+            zIndex: 10,
+            boxShadow: isSidebarOpen ? '4px 0px 10px rgba(0, 0, 0, 0.1)' : 'none',
+            bgcolor: theme.palette.background.paper
+          }}
+        >
+          {isSidebarOpen && (
+            <LearningModelSidebar
+              onClose={toggleSidebar}
+              discipline={discipline}
+              modelId={modelId}
+            />
+          )}
+        </Box>
+      )}
       
       {/* Main content area */}
       <Box
+        ref={fullscreenContainerRef}
         sx={{
           flexGrow: 1,
           height: '100%',
@@ -475,7 +526,7 @@ const ModelViewer: React.FC = () => {
         }}
       >
         {/* Discipline-specific background */}
-        {discipline && (
+        {discipline && !isFullscreen && (
           <DisciplineBackground 
             discipline={(discipline as 'mechanical' | 'civil' | 'electrical')} 
             opacity={0.2}
@@ -489,42 +540,38 @@ const ModelViewer: React.FC = () => {
             width: '100%',
             height: '100%',
             position: 'relative',
-            zIndex: 2,
-            ...(isFullscreen && {
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              zIndex: 9999
-            })
+            zIndex: 2
           }}
         />
 
-        {/* Sidebar Toggle Button */}
-        <Box
-          sx={{
-            position: 'absolute',
-            top: '50%',
-            left: 0,
-            transform: 'translateY(-50%)',
-            zIndex: 5
-          }}
-        >
-          <IconButton
-            onClick={toggleSidebar}
-            aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-            size="large"
+        {/* Sidebar Toggle Button - hide in fullscreen mode */}
+        {!isFullscreen && (
+          <Box
             sx={{
-              backgroundColor: theme.palette.background.paper,
-              borderRadius: '0 50% 50% 0',
-              boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-              '&:hover': {
-                backgroundColor: theme.palette.action.hover
-              }
+              position: 'absolute',
+              top: '50%',
+              left: 0,
+              transform: 'translateY(-50%)',
+              zIndex: 5
             }}
           >
-            {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
-          </IconButton>
-        </Box>
+            <IconButton
+              onClick={toggleSidebar}
+              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
+              size="large"
+              sx={{
+                backgroundColor: theme.palette.background.paper,
+                borderRadius: '0 50% 50% 0',
+                boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
+                '&:hover': {
+                  backgroundColor: theme.palette.action.hover
+                }
+              }}
+            >
+              {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+            </IconButton>
+          </Box>
+        )}
 
         {/* Loading Indicator */}
         {isLoading && (
@@ -555,46 +602,48 @@ const ModelViewer: React.FC = () => {
           </Box>
         )}
 
-        {/* Model Information Card */}
-        <Fade in={infoCardVisible && !isLoading}>
-          <Paper
-            elevation={3}
-            sx={{
-              position: 'absolute',
-              top: 16,
-              right: 16,
-              width: { xs: 'calc(100% - 32px)', sm: 350 },
-              maxWidth: '100%',
-              p: 2,
-              zIndex: 5,
-              borderRadius: 2,
-              bgcolor: 'rgba(255, 255, 255, 0.9)',
-              backdropFilter: 'blur(5px)',
-              ...(!isDarkMode ? {} : {
-                bgcolor: 'rgba(30, 30, 30, 0.9)',
-              })
-            }}
-          >
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
-              <Typography variant="h6" component="h2">{currentModel.title}</Typography>
-              <IconButton size="small" onClick={() => setInfoCardVisible(false)}>
-                <Close fontSize="small" />
-              </IconButton>
-            </Box>
-            <Typography variant="body2" color="text.secondary">
-              {currentModel.description}
-            </Typography>
-            <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
-              <Chip 
-                size="small" 
-                label={discipline.charAt(0).toUpperCase() + discipline.slice(1)} 
-                color="primary" 
-              />
-            </Box>
-          </Paper>
-        </Fade>
+        {/* Model Information Card - hide in fullscreen mode */}
+        {!isFullscreen && (
+          <Fade in={infoCardVisible && !isLoading}>
+            <Paper
+              elevation={3}
+              sx={{
+                position: 'absolute',
+                top: 16,
+                right: 16,
+                width: { xs: 'calc(100% - 32px)', sm: 350 },
+                maxWidth: '100%',
+                p: 2,
+                zIndex: 5,
+                borderRadius: 2,
+                bgcolor: 'rgba(255, 255, 255, 0.9)',
+                backdropFilter: 'blur(5px)',
+                ...(!isDarkMode ? {} : {
+                  bgcolor: 'rgba(30, 30, 30, 0.9)',
+                })
+              }}
+            >
+              <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                <Typography variant="h6" component="h2">{currentModel.title}</Typography>
+                <IconButton size="small" onClick={() => setInfoCardVisible(false)}>
+                  <Close fontSize="small" />
+                </IconButton>
+              </Box>
+              <Typography variant="body2" color="text.secondary">
+                {currentModel.description}
+              </Typography>
+              <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
+                <Chip 
+                  size="small" 
+                  label={discipline.charAt(0).toUpperCase() + discipline.slice(1)} 
+                  color="primary" 
+                />
+              </Box>
+            </Paper>
+          </Fade>
+        )}
 
-        {/* Model Controls - improved visibility and styling */}
+        {/* Model Controls - Always visible, even in fullscreen mode */}
         <Fade in={!isLoading}>
           <Paper
             elevation={6}
@@ -612,7 +661,7 @@ const ModelViewer: React.FC = () => {
               backdropFilter: 'blur(8px)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
               opacity: 1,
-              zIndex: 100, // Significantly higher z-index to ensure visibility
+              zIndex: 10000, // Ultra high z-index to ensure visibility in fullscreen
               transition: 'all 0.3s ease',
               '&:hover': {
                 opacity: 1,
@@ -683,12 +732,23 @@ const ModelViewer: React.FC = () => {
               </IconButton>
             </CustomTooltip>
 
+            <Box sx={{ height: 24, mx: 0.5, width: 1, bgcolor: 'divider' }} />
+
             <CustomTooltip title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
               <IconButton 
                 onClick={toggleFullscreen} 
                 size="medium"
-                color="primary"
-                sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
+                color={isFullscreen ? "secondary" : "primary"}
+                sx={{ 
+                  bgcolor: isFullscreen ? 
+                    (isDarkMode ? 'rgba(245,0,87,0.15)' : 'rgba(245,0,87,0.1)') : 
+                    (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)'),
+                  '&:hover': {
+                    bgcolor: isFullscreen ? 
+                      (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.2)') : 
+                      (isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(25,118,210,0.2)')
+                  }
+                }}
               >
                 {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
               </IconButton>
@@ -742,21 +802,6 @@ const ModelViewer: React.FC = () => {
             </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Fullscreen Background - only visible in fullscreen mode */}
-        {isFullscreen && (
-          <Box
-            sx={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              width: '100vw',
-              height: '100vh',
-              bgcolor: 'background.default',
-              zIndex: 9998
-            }}
-          />
-        )}
       </Box>
     </Box>
   );

@@ -131,7 +131,7 @@ const NavBar: React.FC<NavBarProps> = ({ darkMode, handleToggleDarkMode }) => {
               letterSpacing: '0.5px'
             }}
           >
-            edidiv
+            EduDive
           </Typography>
         </Box>
         
