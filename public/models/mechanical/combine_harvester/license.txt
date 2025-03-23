@@ -1,0 +1,11 @@
+Model Information:
+* title:	Combine harvester for rice
+* source:	https://sketchfab.com/3d-models/combine-harvester-for-rice-3943b391ea9d49c29490ddd40db664b4
+* author:	Okumino-93 (https://sketchfab.com/okumino)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Combine harvester for rice" (https://sketchfab.com/3d-models/combine-harvester-for-rice-3943b391ea9d49c29490ddd40db664b4) by Okumino-93 (https://sketchfab.com/okumino) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

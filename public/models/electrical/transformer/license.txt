@@ -1,0 +1,11 @@
+Model Information:
+* title:	High voltage power transformer
+* source:	https://sketchfab.com/3d-models/high-voltage-power-transformer-727bc7bb6777467dbea2ab6e0590bf4a
+* author:	Showdoze (https://sketchfab.com/Showdoze)
+
+Model License:
+* license type:	CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)
+* requirements:	Author must be credited. No commercial use.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "High voltage power transformer" (https://sketchfab.com/3d-models/high-voltage-power-transformer-727bc7bb6777467dbea2ab6e0590bf4a) by Showdoze (https://sketchfab.com/Showdoze) licensed under CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)

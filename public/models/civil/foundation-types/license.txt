@@ -1,0 +1,11 @@
+Model Information:
+* title:	Construction site, building site, architecture
+* source:	https://sketchfab.com/3d-models/construction-site-building-site-architecture-906a949aa4a84ae0a4c8d41644a467de
+* author:	Metazeon (https://sketchfab.com/Metazeon)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Construction site, building site, architecture" (https://sketchfab.com/3d-models/construction-site-building-site-architecture-906a949aa4a84ae0a4c8d41644a467de) by Metazeon (https://sketchfab.com/Metazeon) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

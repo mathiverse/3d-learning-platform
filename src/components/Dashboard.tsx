@@ -11,13 +11,17 @@ import {
   useTheme,
   CardActionArea,
   Chip,
-  alpha
+  alpha,
+  Button,
+  CardActions
 } from '@mui/material';
 import {
   Build,
   Architecture,
   ElectricBolt,
-  ArrowForward
+  ArrowForward,
+  ViewInAr,
+  School
 } from '@mui/icons-material';
 
 interface DisciplineCard {
@@ -46,7 +50,7 @@ const Dashboard: React.FC = () => {
       name: 'Mechanical Engineering',
       path: 'mechanical',
       description: 'Explore 3D models of machine parts, mechanisms, and mechanical systems',
-      modelCount: 10,
+      modelCount: 3,
       icon: <Build fontSize="large" />,
       lightColors: {
         bgColor: '#e3f2fd',
@@ -61,7 +65,7 @@ const Dashboard: React.FC = () => {
       name: 'Civil Engineering',
       path: 'civil',
       description: 'Study structural elements, building components, and construction details',
-      modelCount: 8,
+      modelCount: 3,
       icon: <Architecture fontSize="large" />,
       lightColors: {
         bgColor: '#e8f5e9',
@@ -76,7 +80,7 @@ const Dashboard: React.FC = () => {
       name: 'Electrical Engineering',
       path: 'electrical',
       description: 'Learn about electrical components, circuits, and power systems',
-      modelCount: 6,
+      modelCount: 3,
       icon: <ElectricBolt fontSize="large" />,
       lightColors: {
         bgColor: '#fff3e0',
@@ -90,13 +94,20 @@ const Dashboard: React.FC = () => {
   ];
 
   return (
-    <Box sx={{ 
-      minHeight: 'calc(100vh - 64px)',
-      py: 6,
-      background: isDarkMode 
-        ? 'linear-gradient(145deg, #121212 0%, #1e1e1e 100%)' 
-        : 'linear-gradient(145deg, #f5f5f5 0%, #ffffff 100%)'
-    }}>
+    <Box
+      className="page-container"
+      sx={{
+        minHeight: '100%',
+        flexGrow: 1,
+        overflow: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        py: 6,
+        background: isDarkMode 
+          ? 'linear-gradient(145deg, #121212 0%, #1e1e1e 100%)' 
+          : 'linear-gradient(145deg, #f5f5f5 0%, #ffffff 100%)'
+      }}
+    >
       <Container maxWidth="lg">
         <Box 
           component={Paper} 
@@ -158,8 +169,8 @@ const Dashboard: React.FC = () => {
                   }}
                 >
                   <CardActionArea 
-                    onClick={() => navigate(`/model/${discipline.path}/intro`)}
-                    sx={{ height: '100%' }}
+                    onClick={() => navigate(`/explore/${discipline.path}`)}
+                    sx={{ height: 'calc(100% - 64px)' }}
                   >
                     <Box 
                       sx={{ 
@@ -198,10 +209,27 @@ const Dashboard: React.FC = () => {
                           color="primary" 
                           variant={isDarkMode ? "filled" : "outlined"}
                         />
-                        <ArrowForward color="primary" />
                       </Box>
                     </CardContent>
                   </CardActionArea>
+                  <CardActions sx={{ p: 2, pt: 0 }}>
+                    <Button 
+                      color="primary" 
+                      onClick={() => navigate(`/explore/${discipline.path}`)}
+                      startIcon={<ViewInAr />}
+                      size="small"
+                    >
+                      Explore Models
+                    </Button>
+                    <Button 
+                      color="secondary"
+                      onClick={() => navigate(`/model/${discipline.path}/intro`)}
+                      startIcon={<School />}
+                      size="small"
+                    >
+                      Start Learning
+                    </Button>
+                  </CardActions>
                 </Card>
               </Grid>
             );

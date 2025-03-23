@@ -1,159 +1,188 @@
 import React, { useEffect, useRef } from 'react';
 import * as THREE from 'three';
+import { SxProps, Theme, Box, useTheme } from '@mui/material';
+
+// Discipline-specific configurations
+const disciplineConfigs = {
+  mechanical: {
+    color: '#f44336', // Red
+    particleCount: 8, // Reduced from 15
+    particleSize: 0.1,
+    lineColor: '#ff7961', // Lighter red for lines
+    rotationSpeed: 0.0005
+  },
+  civil: {
+    color: '#2196f3', // Blue
+    particleCount: 6, // Reduced from 10
+    particleSize: 0.12,
+    lineColor: '#90caf9', // Lighter blue for lines
+    rotationSpeed: 0.0003
+  },
+  electrical: {
+    color: '#ffc107', // Amber
+    particleCount: 8, // Reduced from 20
+    particleSize: 0.08,
+    lineColor: '#ffe082', // Lighter amber for lines
+    rotationSpeed: 0.0007
+  }
+};
 
 interface DisciplineBackgroundProps {
-  discipline: string;
+  discipline: 'mechanical' | 'civil' | 'electrical';
+  opacity?: number;
+  sx?: SxProps<Theme>;
 }
 
-const DisciplineBackground: React.FC<DisciplineBackgroundProps> = ({ discipline }) => {
+const DisciplineBackground: React.FC<DisciplineBackgroundProps> = ({ discipline, opacity = 0.2, sx }) => {
   const containerRef = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<THREE.Scene | null>(null);
+  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
+  const frameIdRef = useRef<number | null>(null);
+  const theme = useTheme();
+  const isDarkMode = theme.palette.mode === 'dark';
 
   useEffect(() => {
     if (!containerRef.current) return;
 
+    // Scene setup
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    sceneRef.current = scene;
+
+    // Camera setup
+    const camera = new THREE.PerspectiveCamera(
+      70,
+      containerRef.current.clientWidth / containerRef.current.clientHeight,
+      0.1,
+      1000
+    );
+    camera.position.z = 5;
+    cameraRef.current = camera;
+
+    // Renderer setup
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    renderer.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
+    renderer.setClearColor(0x000000, 0);
     containerRef.current.appendChild(renderer.domElement);
+    rendererRef.current = renderer;
 
-    // Discipline-specific configurations
-    const config = {
-      mechanical: {
-        geometries: [
-          new THREE.TorusGeometry(1, 0.3, 16, 100), // Gear-like shape
-          new THREE.CylinderGeometry(0.5, 0.5, 2, 32), // Shaft
-          new THREE.TorusKnotGeometry(0.5, 0.2, 64, 8) // Complex mechanical part
-        ],
-        color: '#2196f3',
-        rotationSpeed: 0.01,
-        particleCount: 15
-      },
-      civil: {
-        geometries: [
-          new THREE.BoxGeometry(1, 2, 1), // Building
-          new THREE.ConeGeometry(1, 2, 4), // Roof/pyramid
-          new THREE.BoxGeometry(2, 0.2, 2) // Foundation/platform
-        ],
-        color: '#4caf50',
-        rotationSpeed: 0.005,
-        particleCount: 10
-      },
-      electrical: {
-        geometries: [
-          new THREE.IcosahedronGeometry(0.5, 0), // Electron-like
-          new THREE.TorusGeometry(0.7, 0.2, 16, 100), // Circuit path
-          new THREE.TetrahedronGeometry(0.5) // Energy symbol
-        ],
-        color: '#f44336',
-        rotationSpeed: 0.015,
-        particleCount: 20
-      }
-    };
-
-    const disciplineConfig = config[discipline as keyof typeof config] || config.mechanical;
-    const meshes: THREE.Mesh[] = [];
-
-    // Create multiple instances of each geometry with more interesting materials
-    disciplineConfig.geometries.forEach((geometry) => {
-      for (let i = 0; i < disciplineConfig.particleCount; i++) {
-        const material = new THREE.MeshPhongMaterial({
-          color: disciplineConfig.color,
-          wireframe: true,
-          transparent: true,
-          opacity: 0.6,
-          shininess: 100
-        });
-
-        const mesh = new THREE.Mesh(geometry, material);
-        
-        // Spread objects in a more interesting pattern
-        const radius = 10 + Math.random() * 10;
-        const theta = Math.random() * Math.PI * 2;
-        const phi = Math.random() * Math.PI * 2;
-        
-        mesh.position.set(
-          radius * Math.sin(theta) * Math.cos(phi),
-          radius * Math.sin(theta) * Math.sin(phi),
-          radius * Math.cos(theta)
-        );
-
-        mesh.rotation.set(
-          Math.random() * Math.PI,
-          Math.random() * Math.PI,
-          Math.random() * Math.PI
-        );
-
-        mesh.scale.setScalar(Math.random() * 0.5 + 0.5);
-        
-        meshes.push(mesh);
-        scene.add(mesh);
-      }
+    // Get discipline config
+    const config = disciplineConfigs[discipline];
+    
+    // Create particles
+    const particles = new THREE.Group();
+    scene.add(particles);
+    
+    const particleGeometry = new THREE.SphereGeometry(config.particleSize, 8, 8);
+    const particleMaterial = new THREE.MeshBasicMaterial({ 
+      color: new THREE.Color(config.color),
+      transparent: true,
+      opacity: 0.4 // Reduced from 0.6
     });
-
-    // Add ambient and directional light for better visibility
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-    scene.add(ambientLight);
-
-    const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
-    directionalLight.position.set(10, 10, 10);
-    scene.add(directionalLight);
-
-    camera.position.z = 20;
-
-    // More dynamic animation
+    
+    // Create lines between particles
+    const linesMaterial = new THREE.LineBasicMaterial({ 
+      color: new THREE.Color(config.lineColor),
+      transparent: true,
+      opacity: 0.4 // Reduced from 0.6
+    });
+    
+    const particlePositions: THREE.Vector3[] = [];
+    
+    // Create the particles
+    for (let i = 0; i < config.particleCount; i++) {
+      const particle = new THREE.Mesh(particleGeometry, particleMaterial);
+      
+      // Position particles in a sphere formation
+      const radius = 4 + Math.random() * 3; // Increased distance (was 3 + Math.random() * 2)
+      const theta = Math.random() * Math.PI * 2;
+      const phi = Math.acos((Math.random() * 2) - 1);
+      
+      particle.position.x = radius * Math.sin(phi) * Math.cos(theta);
+      particle.position.y = radius * Math.sin(phi) * Math.sin(theta);
+      particle.position.z = radius * Math.cos(phi);
+      
+      particlePositions.push(particle.position);
+      particles.add(particle);
+    }
+    
+    // Create connections between nearby particles
+    const linesGeometry = new THREE.BufferGeometry();
+    const linePositions: number[] = [];
+    
+    // Connect particles that are close to each other
+    for (let i = 0; i < particlePositions.length; i++) {
+      for (let j = i + 1; j < particlePositions.length; j++) {
+        const p1 = particlePositions[i];
+        const p2 = particlePositions[j];
+        
+        // Only connect particles within a certain distance
+        const distance = p1.distanceTo(p2);
+        if (distance < 4) {
+          linePositions.push(p1.x, p1.y, p1.z);
+          linePositions.push(p2.x, p2.y, p2.z);
+        }
+      }
+    }
+    
+    linesGeometry.setAttribute('position', new THREE.Float32BufferAttribute(linePositions, 3));
+    const lines = new THREE.LineSegments(linesGeometry, linesMaterial);
+    particles.add(lines);
+    
+    // Animation function
     const animate = () => {
-      requestAnimationFrame(animate);
-
-      meshes.forEach((mesh, i) => {
-        // Create more complex rotations
-        mesh.rotation.x += disciplineConfig.rotationSpeed * (1 + Math.sin(i * 0.1));
-        mesh.rotation.y += disciplineConfig.rotationSpeed * 1.5 * (1 + Math.cos(i * 0.1));
-        mesh.rotation.z += disciplineConfig.rotationSpeed * 0.5;
-
-        // Add subtle position animation
-        mesh.position.y += Math.sin(Date.now() * 0.001 + i) * 0.01;
-      });
-
-      renderer.render(scene, camera);
+      if (!sceneRef.current || !cameraRef.current || !rendererRef.current) return;
+      
+      frameIdRef.current = requestAnimationFrame(animate);
+      
+      // Rotate the particles
+      particles.rotation.x += config.rotationSpeed;
+      particles.rotation.y += config.rotationSpeed * 1.5;
+      
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
     };
-
+    
+    // Start the animation
     animate();
-
-    // Handle resize
+    
+    // Handle window resize
     const handleResize = () => {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
+      if (!containerRef.current || !cameraRef.current || !rendererRef.current) return;
+      
+      cameraRef.current.aspect = containerRef.current.clientWidth / containerRef.current.clientHeight;
+      cameraRef.current.updateProjectionMatrix();
+      rendererRef.current.setSize(containerRef.current.clientWidth, containerRef.current.clientHeight);
     };
-
+    
     window.addEventListener('resize', handleResize);
-
+    
+    // Cleanup on unmount
     return () => {
+      if (frameIdRef.current) {
+        cancelAnimationFrame(frameIdRef.current);
+      }
+      
+      if (rendererRef.current && containerRef.current) {
+        containerRef.current.removeChild(rendererRef.current.domElement);
+      }
+      
       window.removeEventListener('resize', handleResize);
-      containerRef.current?.removeChild(renderer.domElement);
-      meshes.forEach(mesh => {
-        mesh.geometry.dispose();
-        (mesh.material as THREE.Material).dispose();
-      });
-      renderer.dispose();
     };
-  }, [discipline]);
-
+  }, [discipline, isDarkMode]);
+  
   return (
-    <div
+    <Box
       ref={containerRef}
-      style={{
-        position: 'fixed',
+      sx={{
+        position: 'absolute',
         top: 0,
         left: 0,
         width: '100%',
         height: '100%',
-        zIndex: -1,
-        opacity: 0.8,
-        background: `linear-gradient(to bottom right, ${discipline === 'mechanical' ? '#e3f2fd' : 
-          discipline === 'civil' ? '#e8f5e9' : 
-          '#ffebee'} 0%, transparent 100%)`
+        zIndex: 0,
+        opacity: opacity,
+        pointerEvents: 'none',
+        ...sx
       }}
     />
   );

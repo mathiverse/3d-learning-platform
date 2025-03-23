@@ -1,113 +1,134 @@
-import React, { useState } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
-import CssBaseline from '@mui/material/CssBaseline';
-import { Box } from '@mui/material';
-import Navigation from './components/Navigation';
+import React, { useState, useMemo } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { ThemeProvider, createTheme, useMediaQuery, CssBaseline, Box } from '@mui/material';
+import { deepPurple, amber } from '@mui/material/colors';
+
+// Components
+import NavBar from './components/NavBar';
 import Dashboard from './components/Dashboard';
 import ModelViewer from './components/ModelViewer';
-import CourseProgress from './components/CourseProgress';
-import SettingsPage from './components/SettingsPage';
+import ExplorePage from './components/ExplorePage';
+import AboutPage from './components/AboutPage';
+import HelpPage from './components/HelpPage';
 import NotFound from './components/NotFound';
-import './styles/main.css';
 
-function App() {
-  const [darkMode, setDarkMode] = useState(
-    localStorage.getItem('darkMode') === 'true' || false
-  );
+const App: React.FC = () => {
+  // State for dark mode toggle
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  const [darkMode, setDarkMode] = useState<boolean>(prefersDarkMode);
   
-  const [username] = useState('Student');
+  // Create theme based on dark mode preference
+  const theme = useMemo(
+    () =>
+      createTheme({
+        palette: {
+          mode: darkMode ? 'dark' : 'light',
+          primary: {
+            main: deepPurple[500],
+          },
+          secondary: {
+            main: amber[500],
+          },
+          background: {
+            default: darkMode ? '#121212' : '#f5f5f7',
+            paper: darkMode ? '#1e1e1e' : '#ffffff',
+          },
+        },
+        typography: {
+          fontFamily: [
+            '-apple-system',
+            'BlinkMacSystemFont',
+            '"Segoe UI"',
+            'Roboto',
+            '"Helvetica Neue"',
+            'Arial',
+            'sans-serif',
+          ].join(','),
+        },
+        components: {
+          MuiCssBaseline: {
+            styleOverrides: {
+              body: {
+                scrollbarWidth: 'thin',
+                '&::-webkit-scrollbar': {
+                  width: '0.4em',
+                },
+                '&::-webkit-scrollbar-track': {
+                  background: darkMode ? '#1e1e1e' : '#f1f1f1',
+                },
+                '&::-webkit-scrollbar-thumb': {
+                  backgroundColor: darkMode ? '#888' : '#bbb',
+                  borderRadius: 6,
+                },
+              },
+            },
+          },
+          MuiAppBar: {
+            styleOverrides: {
+              root: {
+                backgroundColor: darkMode ? '#1e1e1e' : '#ffffff',
+                boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.05)',
+              },
+            },
+          },
+          MuiCard: {
+            styleOverrides: {
+              root: {
+                borderRadius: '12px',
+                transition: 'transform 0.3s, box-shadow 0.3s',
+                '&:hover': {
+                  transform: 'translateY(-4px)',
+                  boxShadow: darkMode 
+                    ? '0 8px 20px rgba(0, 0, 0, 0.4)' 
+                    : '0 8px 20px rgba(0, 0, 0, 0.1)',
+                },
+              },
+            },
+          },
+        },
+      }),
+    [darkMode]
+  );
 
-  const toggleTheme = () => {
-    const newMode = !darkMode;
-    setDarkMode(newMode);
-    localStorage.setItem('darkMode', String(newMode));
+  // Toggle dark mode handler
+  const handleToggleDarkMode = () => {
+    setDarkMode(!darkMode);
   };
 
-  const theme = createTheme({
-    palette: {
-      mode: darkMode ? 'dark' : 'light',
-      primary: {
-        main: '#1976d2',
-      },
-      secondary: {
-        main: '#f50057',
-      },
-      background: {
-        default: darkMode ? '#121212' : '#f5f7fa',
-        paper: darkMode ? '#1e1e1e' : '#ffffff',
-      }
-    },
-    typography: {
-      fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
-      h1: {
-        fontWeight: 700,
-      },
-      h2: {
-        fontWeight: 600,
-      },
-      h3: {
-        fontWeight: 600,
-      },
-      h4: {
-        fontWeight: 600,
-      },
-      h5: {
-        fontWeight: 600,
-      },
-      h6: {
-        fontWeight: 600,
-      },
-    },
-    components: {
-      MuiButton: {
-        styleOverrides: {
-          root: {
-            textTransform: 'none',
-            borderRadius: 8,
-          },
-        },
-      },
-      MuiCard: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
-          },
-        },
-      },
-      MuiPaper: {
-        styleOverrides: {
-          root: {
-            borderRadius: 12,
-          },
-        },
-      },
-    },
-  });
-
   return (
-    <React.StrictMode>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
-        <Router>
-          <Box className="app-container">
-            <Navigation 
-              username={username} 
-              onThemeToggle={toggleTheme} 
-              isDarkMode={darkMode} 
-            />
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <Router>
+        <Box sx={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+          {/* Nav Bar */}
+          <NavBar darkMode={darkMode} handleToggleDarkMode={handleToggleDarkMode} />
+          
+          {/* Main Content */}
+          <Box 
+            component="main" 
+            sx={{ 
+              flexGrow: 1, 
+              display: 'flex', 
+              flexDirection: 'column',
+              overflow: 'auto',
+              position: 'relative'
+            }}
+          >
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/model/:discipline/:modelId" element={<ModelViewer />} />
-              <Route path="/progress" element={<CourseProgress />} />
-              <Route path="/settings" element={<SettingsPage isDarkMode={darkMode} onThemeToggle={toggleTheme} />} />
-              <Route path="*" element={<NotFound />} />
+              <Route path="/explore" element={<ExplorePage />} />
+              <Route path="/explore/:discipline" element={<ExplorePage />} />
+              <Route path="/about" element={<AboutPage />} />
+              <Route path="/help" element={<HelpPage />} />
+              <Route path="/404" element={<NotFound />} />
+              <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
           </Box>
-        </Router>
-      </ThemeProvider>
-    </React.StrictMode>
+        </Box>
+      </Router>
+    </ThemeProvider>
   );
-}
+};
 
 export default App;
