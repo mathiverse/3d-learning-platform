@@ -9,7 +9,6 @@ import {
   IconButton,
   Paper,
   Button,
-  Tooltip,
   Chip,
   Tab,
   Tabs,
@@ -619,7 +618,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
       </Box>
     );
   }
-  
+
   return (
     <Box
       sx={{
@@ -629,7 +628,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         flexDirection: 'column',
         overflow: 'hidden',
         backgroundColor: isDarkMode ? 'background.paper' : '#fff',
-        borderRight: `1px solid ${theme.palette.divider}`
+        borderRight: `1px solid ${theme.palette.divider}`,
+        maxWidth: '100%'
       }}
     >
       {/* Header with title and close button */}
@@ -643,25 +643,33 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             : theme.palette.primary.light,
           position: 'sticky',
           top: 0,
-          zIndex: 10
+          zIndex: 10,
+          width: '100%'
         }}
       >
         <Box sx={{ 
           display: 'flex', 
           justifyContent: 'space-between', 
-          alignItems: 'center' 
+          alignItems: 'center',
+          width: '100%',
+          overflow: 'hidden'
         }}>
           <Typography 
             variant={isMobile ? "subtitle1" : "h6"} 
             fontWeight="600" 
             sx={{ 
-              color: isDarkMode ? 'text.primary' : '#fff'
+              color: isDarkMode ? 'text.primary' : '#fff',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              mr: 1
             }}
           >
             {modelInfo.title}
           </Typography>
           <IconButton size="small" onClick={onClose} sx={{ 
-            color: isDarkMode ? 'text.primary' : '#fff'
+            color: isDarkMode ? 'text.primary' : '#fff',
+            flexShrink: 0
           }}>
             <Close fontSize="small" />
           </IconButton>
@@ -721,6 +729,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         p: 0,
         maxHeight: { xs: 'calc(100% - 110px)', sm: 'calc(100vh - 170px)' },
         scrollbarWidth: 'thin',
+        width: '100%',
+        WebkitOverflowScrolling: 'touch',
         '&::-webkit-scrollbar': {
           width: '6px',
         },
@@ -734,8 +744,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
           <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Typography variant="body2" paragraph>
               {modelInfo.description}
-            </Typography>
-            
+      </Typography>
+      
             {/* Key Features */}
             <Paper 
               elevation={0} 
@@ -760,12 +770,12 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
               <List dense disablePadding>
                 {modelInfo.keyFeatures.map((feature, index) => (
                   <ListItem key={index} sx={{ py: 0.5 }}>
-                    <ListItemText 
+              <ListItemText 
                       primary={
                         <Typography variant="body2">• {feature}</Typography>
                       } 
-                    />
-                  </ListItem>
+              />
+            </ListItem>
                 ))}
               </List>
             </Paper>
@@ -888,9 +898,9 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                         <Typography variant="body2">• {fact}</Typography>
                       } 
                     />
-                  </ListItem>
-                ))}
-              </List>
+                    </ListItem>
+                  ))}
+                </List>
             </Paper>
             
             {/* Related Models */}

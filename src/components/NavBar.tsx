@@ -123,7 +123,7 @@ const NavBar: React.FC<NavBarProps> = ({ darkMode, handleToggleDarkMode }) => {
           </Box>
           
           {/* Breadcrumb navigation for model viewer */}
-          {isModelViewerPage && (
+          {isModelViewerPage && !isMobile && (
             <Fade in={true}>
               <Box 
                 sx={{ 

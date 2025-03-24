@@ -20,8 +20,6 @@ import {
   DialogTitle
 } from '@mui/material';
 import { 
-  ChevronLeft, 
-  ChevronRight, 
   ZoomIn, 
   ZoomOut, 
   Close,
@@ -34,7 +32,6 @@ import {
 } from '@mui/icons-material';
 import DisciplineBackground from './DisciplineBackground';
 import LearningModelSidebar from './LearningModelSidebar';
-import CustomTooltip from './CustomTooltip';
 
 // Define a proper type for model configurations
 interface ModelConfig {
@@ -205,35 +202,79 @@ const ModelViewer: React.FC = () => {
       // Enter fullscreen
       if (fullscreenContainerRef.current.requestFullscreen) {
         fullscreenContainerRef.current.requestFullscreen()
-          .then(() => setIsFullscreen(true))
+          .then(() => {
+            setIsFullscreen(true);
+            // Force resize after entering fullscreen to ensure renderer is properly sized
+            setTimeout(() => {
+              handleResizeForced();
+            }, 100);
+          })
           .catch(err => console.error(`Error attempting to enable fullscreen: ${err.message}`));
       } else if ((fullscreenContainerRef.current as any).webkitRequestFullscreen) { // Safari
         (fullscreenContainerRef.current as any).webkitRequestFullscreen();
         setIsFullscreen(true);
+        setTimeout(() => handleResizeForced(), 100);
       } else if ((fullscreenContainerRef.current as any).msRequestFullscreen) { // IE11
         (fullscreenContainerRef.current as any).msRequestFullscreen();
         setIsFullscreen(true);
+        setTimeout(() => handleResizeForced(), 100);
       }
     } else {
       // Exit fullscreen
       if (document.exitFullscreen) {
         document.exitFullscreen()
-          .then(() => setIsFullscreen(false))
+          .then(() => {
+            setIsFullscreen(false);
+            // Force resize after exiting fullscreen to ensure renderer is properly sized
+            setTimeout(() => {
+              handleResizeForced();
+            }, 100);
+          })
           .catch(err => console.error(`Error attempting to exit fullscreen: ${err.message}`));
       } else if ((document as any).webkitExitFullscreen) { // Safari
         (document as any).webkitExitFullscreen();
         setIsFullscreen(false);
+        setTimeout(() => handleResizeForced(), 100);
       } else if ((document as any).msExitFullscreen) { // IE11
         (document as any).msExitFullscreen();
         setIsFullscreen(false);
+        setTimeout(() => handleResizeForced(), 100);
       }
+    }
+  };
+
+  // Force resize of renderer and camera
+  const handleResizeForced = () => {
+    if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
+    
+    // Get dimensions from the correct container depending on fullscreen state
+    const container = document.fullscreenElement || mountRef.current;
+    const width = container.clientWidth;
+    const height = container.clientHeight;
+    
+    // Update camera aspect ratio
+    cameraRef.current.aspect = width / height;
+    cameraRef.current.updateProjectionMatrix();
+    
+    // Update renderer size
+    rendererRef.current.setSize(width, height);
+    
+    // Force a render to update the view
+    if (sceneRef.current) {
+      rendererRef.current.render(sceneRef.current, cameraRef.current);
     }
   };
 
   // Listen for fullscreen change events to update state accordingly
   useEffect(() => {
     const handleFullscreenChange = () => {
-      setIsFullscreen(!!document.fullscreenElement);
+      const isInFullscreenNow = !!document.fullscreenElement;
+      setIsFullscreen(isInFullscreenNow);
+      
+      // Force resize when fullscreen state changes
+      setTimeout(() => {
+        handleResizeForced();
+      }, 100);
     };
 
     document.addEventListener('fullscreenchange', handleFullscreenChange);
@@ -335,6 +376,13 @@ const ModelViewer: React.FC = () => {
     renderer.outputEncoding = THREE.sRGBEncoding;
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap; // Softer shadows
+    
+    // Set CSS styles on the renderer's canvas element to ensure it fills space
+    renderer.domElement.style.display = 'block';
+    renderer.domElement.style.width = '100%';
+    renderer.domElement.style.height = '100%';
+    renderer.domElement.style.position = 'absolute';
+    
     mountRef.current.appendChild(renderer.domElement);
     rendererRef.current = renderer;
     
@@ -375,9 +423,9 @@ const ModelViewer: React.FC = () => {
       modelConfigs.mechanical.intro;
     
     // Load the model with better error handling and progress feedback
-    const loader = new GLTFLoader();
+      const loader = new GLTFLoader();
     
-    loader.load(
+      loader.load(
       modelConfig.url,
       (gltf) => {
         // Process the model after loading
@@ -394,7 +442,7 @@ const ModelViewer: React.FC = () => {
               if (Array.isArray(child.material)) {
                 child.material.forEach(mat => {
                   mat.needsUpdate = true;
-                  if (isWireframe) {
+            if (isWireframe) {
                     (mat as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial | THREE.MeshPhongMaterial).wireframe = true;
                   }
                 });
@@ -432,8 +480,8 @@ const ModelViewer: React.FC = () => {
       },
       (error) => {
         console.error('Error loading model:', error);
-        setIsLoading(false);
-      }
+      setIsLoading(false);
+    }
     );
     
     // Animation loop
@@ -457,8 +505,10 @@ const ModelViewer: React.FC = () => {
     const handleResize = () => {
       if (!mountRef.current || !cameraRef.current || !rendererRef.current) return;
       
-      const width = mountRef.current.clientWidth;
-      const height = mountRef.current.clientHeight;
+      // Get dimensions from the correct container depending on fullscreen state
+      const container = document.fullscreenElement || mountRef.current;
+      const width = container.clientWidth;
+      const height = container.clientHeight;
       
       cameraRef.current.aspect = width / height;
       cameraRef.current.updateProjectionMatrix();
@@ -510,28 +560,30 @@ const ModelViewer: React.FC = () => {
         display: 'flex',
         bgcolor: 'background.default',
         flexDirection: { xs: 'column', sm: 'row' }, // Stack vertically on very small screens
-        overflow: 'hidden'
+        overflow: 'hidden',
+        maxWidth: '100vw' // Ensure no horizontal overflow
       }}>
       
       {/* Sidebar - hide in fullscreen mode */}
       {!isFullscreen && (
-        <Box
-          sx={{
+      <Box
+        sx={{
             height: { xs: isSidebarOpen ? '100%' : 0, sm: '100%' }, // Take full height on mobile when open
-            width: { xs: '100%', sm: isSidebarOpen ? (isMobile ? 260 : 300) : 0 }, // Full width on xs, controlled width on sm+
+            width: { xs: '100%', sm: isSidebarOpen ? (isMobile ? 350 : 550) : 0, md: isSidebarOpen ? (isMobile ? 350 : 450) : 0, lg: isSidebarOpen ? (isMobile ? 350 : 550) : 0 }, // Further increased width for desktop and mobile
             transition: {
               xs: 'height 0.3s ease',
               sm: 'width 0.3s ease'
             },
             overflow: 'hidden',
-            zIndex: 10,
+            zIndex: 20, // Increased zIndex to be above floating controls
             boxShadow: isSidebarOpen ? 
               { xs: '0 4px 10px rgba(0, 0, 0, 0.2)', sm: '4px 0px 10px rgba(0, 0, 0, 0.1)' } : 
               'none',
             bgcolor: theme.palette.background.paper,
             position: { xs: 'absolute', sm: 'relative' }, // Position absolute on xs to overlay
             top: 0,
-            left: 0
+            left: 0,
+            borderRight: isSidebarOpen ? `1px solid ${theme.palette.divider}` : 'none' // Add border for better separation
           }}
         >
           {isSidebarOpen && (
@@ -541,7 +593,7 @@ const ModelViewer: React.FC = () => {
               modelId={modelId}
             />
           )}
-        </Box>
+      </Box>
       )}
       
       {/* Main content area */}
@@ -552,7 +604,18 @@ const ModelViewer: React.FC = () => {
           height: '100%', // Always full height
           width: '100%',
           position: 'relative',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          display: 'flex', // Added to ensure proper sizing in fullscreen
+          flexDirection: 'column', // Ensures content fills the container properly
+          ...(isFullscreen && {
+            // Override styles for fullscreen mode
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            zIndex: 9999
+          })
         }}
       >
         {/* Discipline-specific background */}
@@ -570,7 +633,16 @@ const ModelViewer: React.FC = () => {
             width: '100%',
             height: '100%',
             position: 'relative',
-            zIndex: 2
+            zIndex: 2,
+            overflow: 'hidden', // Prevent overflow
+            ...(isFullscreen && { // Fix for blank space in fullscreen mode
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0,
+              bgcolor: isDarkMode ? '#1a1a2e' : '#f5f5f5', // Match the scene background color
+            })
           }}
         />
 
@@ -585,7 +657,7 @@ const ModelViewer: React.FC = () => {
               position: 'absolute',
               top: 16,
               left: 16,
-              zIndex: 20,
+              zIndex: 30, // Increased z-index to be above the info card
               borderRadius: '50%',
               boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
               '&:hover': {
@@ -635,7 +707,7 @@ const ModelViewer: React.FC = () => {
                 position: 'absolute',
                 top: 16,
                 right: 16,
-                width: { xs: 'calc(100% - 32px)', sm: 350 },
+                width: { xs: !isSidebarOpen ? 'calc(100% - 80px)' : 'calc(100% - 32px)', sm: 350 }, // Adjusted width to account for sidebar toggle
                 maxWidth: '100%',
                 p: 2,
                 zIndex: 5,
@@ -667,28 +739,40 @@ const ModelViewer: React.FC = () => {
           </Fade>
         )}
 
-        {/* Floating controls container - adjust position for fullscreen mode */}
+        {/* Floating controls container - consistent horizontal layout at bottom */}
         <Box
           sx={{
             position: 'absolute',
-            bottom: { xs: 16, sm: 24 },
-            left: { xs: 16, sm: 24 },
+            bottom: 16,
+            left: '50%',
+            transform: 'translateX(-50%)',
             display: 'flex',
-            flexDirection: 'column',
+            flexDirection: 'row', // Always horizontal for consistency
             gap: 1,
-            zIndex: 20,
-            transition: 'all 0.3s ease'
+            zIndex: 15,
+            transition: 'all 0.3s ease',
+            filter: 'drop-shadow(0px 0px 4px rgba(0,0,0,0.2))',
+            // Make sure it doesn't overflow on small screens
+            maxWidth: 'calc(100% - 32px)',
+            justifyContent: 'center', // Center the controls
+            // If in fullscreen or sidebar is closed, use the full width
+            // If sidebar is open, adjust width to account for sidebar
+            width: { 
+              xs: 'calc(100% - 32px)', 
+              sm: !isSidebarOpen || isFullscreen ? 'calc(100% - 32px)' : isMobile ? 'calc(100% - 350px - 32px)' : 'calc(100% - 450px - 32px)'
+            }
           }}
         >
+          {/* First group of controls */}
           <Paper
             elevation={3}
             sx={{
               borderRadius: 2,
               overflow: 'hidden',
               display: 'flex',
-              flexDirection: isSmallScreen ? 'column' : 'row',
+              flexDirection: 'row', // Always horizontal
               bgcolor: 'background.paper',
-              opacity: 0.9
+              opacity: 0.95
             }}
           >
             {/* Zoom Controls */}
@@ -710,16 +794,15 @@ const ModelViewer: React.FC = () => {
             </IconButton>
           </Paper>
 
-          {/* Additional Controls */}
           <Paper
             elevation={3}
             sx={{
               borderRadius: 2,
               overflow: 'hidden',
               display: 'flex',
-              flexDirection: isSmallScreen ? 'column' : 'row',
+              flexDirection: 'row', // Always horizontal
               bgcolor: 'background.paper',
-              opacity: 0.9
+              opacity: 0.95
             }}
           >
             <IconButton
