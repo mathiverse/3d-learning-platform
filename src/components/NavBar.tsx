@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState } from 'react';
 import { 
   AppBar, 
   Toolbar, 
@@ -7,8 +7,6 @@ import {
   Box, 
   Button, 
   useTheme, 
-  Menu, 
-  MenuItem, 
   Tooltip, 
   useMediaQuery,
   Fade,
@@ -17,7 +15,6 @@ import {
   ListItem,
   ListItemIcon,
   ListItemText,
-  ClickAwayListener
 } from '@mui/material';
 import {
   Brightness4,
@@ -29,7 +26,7 @@ import {
   Help,
   ViewInAr,
 } from '@mui/icons-material';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
 interface NavBarProps {
   darkMode: boolean;
@@ -38,35 +35,12 @@ interface NavBarProps {
 
 const NavBar: React.FC<NavBarProps> = ({ darkMode, handleToggleDarkMode }) => {
   const theme = useTheme();
-  const navigate = useNavigate();
   const location = useLocation();
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
   
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [menuAnchorEl, setMenuAnchorEl] = useState<null | HTMLElement>(null);
   
   const isModelViewerPage = location.pathname.includes('/model/');
-  
-  const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
-    setMenuAnchorEl(event.currentTarget);
-  };
-  
-  const handleMenuClose = () => {
-    setMenuAnchorEl(null);
-  };
-  
-  const handleNavigate = (path: string) => {
-    navigate(path);
-    handleMenuClose();
-    setMobileMenuOpen(false);
-  };
-
-  // Close mobile menu when clicking outside
-  const handleClickAway = () => {
-    if (mobileMenuOpen) {
-      setMobileMenuOpen(false);
-    }
-  };
   
   // Define navigation items
   const navItems = [

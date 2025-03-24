@@ -11,10 +11,8 @@ import {
   useTheme, 
   CircularProgress, 
   Button,
-  Tooltip,
   Fade,
   Chip,
-  Divider,
   useMediaQuery,
   Dialog,
   DialogContent,
@@ -26,17 +24,12 @@ import {
   ChevronRight, 
   ZoomIn, 
   ZoomOut, 
-  RestartAlt, 
   Close,
-  Info,
   Fullscreen,
   GridOn,
   PhotoCamera,
   FullscreenExit,
-  ViewInAr,
   Refresh,
-  Cameraswitch,
-  LightMode
 } from '@mui/icons-material';
 import DisciplineBackground from './DisciplineBackground';
 import LearningModelSidebar from './LearningModelSidebar';
@@ -136,7 +129,6 @@ const ModelViewer: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
   const [isLoading, setIsLoading] = useState(true);
   const [infoCardVisible, setInfoCardVisible] = useState(true);
-  const [controlsVisible, setControlsVisible] = useState(true);
   const [screenshotDialogOpen, setScreenshotDialogOpen] = useState(false);
   const [screenshotURL, setScreenshotURL] = useState<string | null>(null);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -144,14 +136,11 @@ const ModelViewer: React.FC = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
-  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const controlsRef = useRef<OrbitControls | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const fullscreenContainerRef = useRef<HTMLDivElement>(null);
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [currentCamera, setCurrentCamera] = useState('default');
-  const [lightIntensity, setLightIntensity] = useState(0.7);
 
   // Fixed zoom handlers
   const handleZoomIn = () => {
@@ -517,20 +506,30 @@ const ModelViewer: React.FC = () => {
         width: '100%',
         position: 'relative',
         display: 'flex',
-        bgcolor: 'background.default'
+        bgcolor: 'background.default',
+        flexDirection: { xs: 'column', sm: 'row' }, // Stack vertically on very small screens
+        overflow: 'hidden'
       }}>
       
       {/* Sidebar - hide in fullscreen mode */}
       {!isFullscreen && (
         <Box
           sx={{
-            height: '100%',
-            width: isSidebarOpen ? (isMobile ? 260 : 300) : 0,
-            transition: 'width 0.3s ease',
+            height: { xs: isSidebarOpen ? '40%' : 0, sm: '100%' }, // Take 40% height on mobile, full height otherwise
+            width: { xs: '100%', sm: isSidebarOpen ? (isMobile ? 260 : 300) : 0 }, // Full width on xs, controlled width on sm+
+            transition: {
+              xs: 'height 0.3s ease',
+              sm: 'width 0.3s ease'
+            },
             overflow: 'hidden',
             zIndex: 10,
-            boxShadow: isSidebarOpen ? '4px 0px 10px rgba(0, 0, 0, 0.1)' : 'none',
-            bgcolor: theme.palette.background.paper
+            boxShadow: isSidebarOpen ? 
+              { xs: '0 4px 10px rgba(0, 0, 0, 0.1)', sm: '4px 0px 10px rgba(0, 0, 0, 0.1)' } : 
+              'none',
+            bgcolor: theme.palette.background.paper,
+            position: { xs: 'absolute', sm: 'relative' }, // Position absolute on xs to overlay
+            top: 0,
+            left: 0
           }}
         >
           {isSidebarOpen && (
@@ -548,7 +547,8 @@ const ModelViewer: React.FC = () => {
         ref={fullscreenContainerRef}
         sx={{
           flexGrow: 1,
-          height: '100%',
+          height: { xs: isSidebarOpen ? '60%' : '100%', sm: '100%' }, // Adjust height based on sidebar on mobile
+          width: '100%',
           position: 'relative',
           overflow: 'hidden'
         }}
@@ -577,9 +577,12 @@ const ModelViewer: React.FC = () => {
           <Box
             sx={{
               position: 'absolute',
-              top: '50%',
-              left: 0,
-              transform: 'translateY(-50%)',
+              top: { xs: isSidebarOpen ? 'calc(40% - 24px)' : '50%', sm: '50%' }, // Position based on sidebar state on mobile
+              left: { xs: '50%', sm: 0 }, // Center horizontally on mobile, left on desktop
+              transform: { 
+                xs: isSidebarOpen ? 'translate(-50%, 0) rotate(90deg)' : 'translate(-50%, -50%) rotate(0deg)', 
+                sm: 'translateY(-50%)' 
+              }, // Different transforms for mobile/desktop
               zIndex: 5
             }}
           >
@@ -589,14 +592,16 @@ const ModelViewer: React.FC = () => {
               size="large"
               sx={{
                 backgroundColor: theme.palette.background.paper,
-                borderRadius: '0 50% 50% 0',
+                borderRadius: { xs: isSidebarOpen ? '50% 50% 0 0' : '50%', sm: '0 50% 50% 0' }, // Different shapes on mobile/desktop
                 boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
                 '&:hover': {
                   backgroundColor: theme.palette.action.hover
                 }
               }}
             >
-              {isSidebarOpen ? <ChevronLeft /> : <ChevronRight />}
+              {isSidebarOpen ? 
+                <ChevronLeft sx={{ transform: { xs: 'rotate(-90deg)', sm: 'none' } }} /> : 
+                <ChevronRight sx={{ transform: { xs: 'none', sm: 'none' } }} />}
             </IconButton>
           </Box>
         )}
@@ -671,29 +676,108 @@ const ModelViewer: React.FC = () => {
           </Fade>
         )}
 
-        {/* Model Controls - Always visible, even in fullscreen mode */}
+        {/* Screenshot Dialog */}
+        <Dialog 
+          open={screenshotDialogOpen} 
+          onClose={() => setScreenshotDialogOpen(false)}
+          maxWidth="md"
+          fullWidth
+          sx={{
+            '& .MuiDialog-paper': {
+              margin: { xs: '8px', sm: '16px', md: '32px' },
+              width: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)', md: 'auto' },
+              maxHeight: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)', md: 'auto' },
+              zIndex: 11000, // Ultra high z-index above everything
+              borderRadius: { xs: 1, sm: 2 },
+              overflow: 'hidden'
+            },
+            zIndex: 11000, // This ensures the dialog appears above everything else including controls
+            backdropFilter: 'blur(3px)' // Add a blur effect to the backdrop
+          }}
+        >
+          <DialogTitle sx={{ 
+            p: { xs: 1.5, sm: 2, md: 3 },
+            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' }
+          }}>
+            Screenshot
+            <IconButton
+              onClick={() => setScreenshotDialogOpen(false)}
+              sx={{ 
+                position: 'absolute', 
+                right: { xs: 4, sm: 8 }, 
+                top: { xs: 4, sm: 8 }
+              }}
+              aria-label="Close screenshot dialog"
+            >
+              <Close />
+            </IconButton>
+          </DialogTitle>
+          <DialogContent sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
+            {screenshotURL && (
+              <Box sx={{ textAlign: 'center' }}>
+                <img 
+                  src={screenshotURL} 
+                  alt="Model Screenshot" 
+                  style={{ 
+                    maxWidth: '100%', 
+                    maxHeight: '60vh',
+                    objectFit: 'contain',
+                    borderRadius: 4,
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
+                  }} 
+                />
+              </Box>
+            )}
+          </DialogContent>
+          <DialogActions sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, justifyContent: 'space-between' }}>
+            <Button 
+              onClick={() => setScreenshotDialogOpen(false)}
+              sx={{ minWidth: { xs: 70, sm: 80, md: 100 } }}
+            >
+              Close
+            </Button>
+            <Button 
+              variant="contained" 
+              component="a"
+              href={screenshotURL || '#'}
+              download={`${discipline}-${modelId}-screenshot.png`}
+              disabled={!screenshotURL}
+              sx={{ 
+                minWidth: { xs: 90, sm: 100, md: 120 },
+                ml: 1
+              }}
+            >
+              Download
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Improve controls responsiveness for mobile */}
         <Fade in={!isLoading}>
           <Paper
             elevation={6}
             sx={{
               position: 'absolute',
-              bottom: isMobile ? 20 : 30,
+              bottom: isMobile ? 16 : 30,
               left: '50%',
               transform: 'translateX(-50%)',
               display: 'flex',
               alignItems: 'center',
               gap: isMobile ? 0.5 : 1,
-              p: isMobile ? 1 : 1.5,
+              p: isMobile ? 0.75 : 1.5,
               borderRadius: 10,
               bgcolor: isDarkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
               backdropFilter: 'blur(8px)',
               boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
               opacity: 1,
-              zIndex: 10000, // Ultra high z-index to ensure visibility in fullscreen
+              zIndex: 10000, // Ultra high z-index but below the dialog
               transition: 'all 0.3s ease',
+              flexWrap: isMobile ? 'wrap' : 'nowrap',
+              justifyContent: 'center',
+              maxWidth: isMobile ? 'calc(100% - 32px)' : 'auto',
               '&:hover': {
                 opacity: 1,
-                transform: 'translateX(-50%) scale(1.05)'
+                transform: 'translateX(-50%) scale(1.02)'
               }
             }}
           >
@@ -813,53 +897,6 @@ const ModelViewer: React.FC = () => {
             }
           }}
         />
-
-        {/* Screenshot Dialog */}
-        <Dialog 
-          open={screenshotDialogOpen} 
-          onClose={() => setScreenshotDialogOpen(false)}
-          maxWidth="md"
-          fullWidth
-        >
-          <DialogTitle>
-            Screenshot
-            <IconButton
-              onClick={() => setScreenshotDialogOpen(false)}
-              sx={{ position: 'absolute', right: 8, top: 8 }}
-            >
-              <Close />
-            </IconButton>
-          </DialogTitle>
-          <DialogContent>
-            {screenshotURL && (
-              <Box sx={{ textAlign: 'center' }}>
-                <img 
-                  src={screenshotURL} 
-                  alt="Model Screenshot" 
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '70vh',
-                    objectFit: 'contain',
-                    borderRadius: 4,
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                  }} 
-                />
-              </Box>
-            )}
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={() => setScreenshotDialogOpen(false)}>Close</Button>
-            <Button 
-              variant="contained" 
-              component="a"
-              href={screenshotURL || '#'}
-              download={`${discipline}-${modelId}-screenshot.png`}
-              disabled={!screenshotURL}
-            >
-              Download
-            </Button>
-          </DialogActions>
-        </Dialog>
       </Box>
     </Box>
   );

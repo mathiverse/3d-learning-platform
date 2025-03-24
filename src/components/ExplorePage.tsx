@@ -12,7 +12,6 @@ import {
   Tab, 
   Chip,
   useTheme,
-  IconButton,
   CardActionArea,
   CardActions,
   Paper,
@@ -67,7 +66,7 @@ const ExplorePage: React.FC = () => {
     advanced: '#f44336'
   };
   
-  const handleTabChange = (event: React.SyntheticEvent, newValue: string) => {
+  const handleTabChange = (_event: React.SyntheticEvent, newValue: string) => {
     setCurrentTab(newValue);
     if (newValue === 'all') {
       navigate('/explore');

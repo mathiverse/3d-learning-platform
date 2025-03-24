@@ -19,7 +19,6 @@ import {
   Build,
   Architecture,
   ElectricBolt,
-  ArrowForward,
   ViewInAr,
   School
 } from '@mui/icons-material';

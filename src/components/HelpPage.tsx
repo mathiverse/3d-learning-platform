@@ -39,7 +39,7 @@ const HelpPage: React.FC = () => {
   const theme = useTheme();
   const [expanded, setExpanded] = useState<string | false>('panel1');
 
-  const handleChange = (panel: string) => (event: React.SyntheticEvent, isExpanded: boolean) => {
+  const handleChange = (panel: string) => (_event: React.SyntheticEvent, isExpanded: boolean) => {
     setExpanded(isExpanded ? panel : false);
   };
 

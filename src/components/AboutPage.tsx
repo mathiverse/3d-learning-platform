@@ -1,6 +1,6 @@
 import React from 'react';
 import { Container, Typography, Paper, Box, Grid, Divider, useTheme } from '@mui/material';
-import { Info, School, ViewInAr, Engineering } from '@mui/icons-material';
+import { Info, School, ViewInAr } from '@mui/icons-material';
 
 /**
  * AboutPage component that displays information about the EduDive platform

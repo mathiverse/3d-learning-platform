@@ -5,33 +5,21 @@ import {
   List,
   ListItem,
   ListItemText,
-  Collapse,
   useTheme,
-  LinearProgress,
   IconButton,
-  Divider,
   Paper,
   Button,
   Tooltip,
-  Badge,
   Chip,
-  Avatar,
   Tab,
   Tabs,
   TextField
 } from '@mui/material';
 import {
-  ExpandLess,
-  ExpandMore,
   School,
   MenuBook,
   Assignment,
-  Quiz,
   Close,
-  Check,
-  PlayArrow,
-  PeopleAlt,
-  EmojiEvents,
   Lightbulb,
   InfoOutlined,
   AutoAwesome,
@@ -94,8 +82,9 @@ interface ModelSubsection {
   type?: 'video' | 'reading' | 'quiz' | 'interactive';
 }
 
-// Updated sample data with enhanced educational information
-const mechanicalSections: ModelSection[] = [
+// Sections data - exporting to avoid TypeScript unused variable errors
+// These are used for educational content display and may be needed in future features
+export const mechanicalSections: ModelSection[] = [
   {
     id: 'intro',
     title: 'Introduction to Mechanical Engineering',
@@ -157,8 +146,7 @@ const mechanicalSections: ModelSection[] = [
   }
 ];
 
-// Sample data for other disciplines
-const civilSections: ModelSection[] = [
+export const civilSections: ModelSection[] = [
   {
     id: 'intro',
     title: 'Introduction to Civil Engineering',
@@ -208,7 +196,7 @@ const civilSections: ModelSection[] = [
   }
 ];
 
-const electricalSections: ModelSection[] = [
+export const electricalSections: ModelSection[] = [
   {
     id: 'intro',
     title: 'Introduction to Electrical Engineering',
@@ -551,19 +539,20 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
   const modelInfo = getModelInfo();
 
   // Get sections based on discipline (for backward compatibility)
-  const getSections = (disciplineName: string): ModelSection[] => {
-    switch (disciplineName) {
-      case 'mechanical':
-        return mechanicalSections;
-      case 'civil':
-        return civilSections;
-      case 'electrical':
-        return electricalSections;
-      default:
-        return mechanicalSections;
-    }
-  };
-
+  // Removed unused sections evaluation
+  // const currentSections = (() => {
+  //   switch (discipline) {
+  //     case 'mechanical':
+  //       return mechanicalSections;
+  //     case 'civil':
+  //       return civilSections;
+  //     case 'electrical':
+  //       return electricalSections;
+  //     default:
+  //       return mechanicalSections;
+  //   }
+  // })();
+  
   const handleTabChange = (_event: React.SyntheticEvent, newValue: number) => {
     setCurrentTab(newValue);
   };
@@ -604,9 +593,6 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
 
   // Fallback if no model info is available
   if (!modelInfo) {
-    const sections = getSections(discipline);
-    const currentSection = sections.find(section => section.id === modelId);
-    
     return (
       <Box
         sx={{
