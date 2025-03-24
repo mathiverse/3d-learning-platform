@@ -13,7 +13,8 @@ import {
   Chip,
   Tab,
   Tabs,
-  TextField
+  TextField,
+  useMediaQuery
 } from '@mui/material';
 import {
   School,
@@ -524,6 +525,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
   const [userNotes, setUserNotes] = useState<string>('');
   const [highlightedComponent, setHighlightedComponent] = useState<string | null>(null);
   const [explorationMode, setExplorationMode] = useState<boolean>(false);
+  const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
   // Get model info based on discipline and modelId
   const getModelInfo = (): ModelInfo | undefined => {
@@ -632,16 +634,16 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
     >
       {/* Header with title and close button */}
       <Paper 
-        elevation={0} 
+        elevation={2} 
         sx={{ 
-          p: 2, 
+          p: { xs: 1.5, sm: 2 }, 
           borderBottom: `1px solid ${theme.palette.divider}`,
           bgcolor: isDarkMode 
             ? 'background.paper' 
             : theme.palette.primary.light,
           position: 'sticky',
           top: 0,
-          zIndex: 1
+          zIndex: 10
         }}
       >
         <Box sx={{ 
@@ -649,9 +651,13 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
           justifyContent: 'space-between', 
           alignItems: 'center' 
         }}>
-          <Typography variant="h6" fontWeight="600" sx={{ 
-            color: isDarkMode ? 'text.primary' : '#fff'
-          }}>
+          <Typography 
+            variant={isMobile ? "subtitle1" : "h6"} 
+            fontWeight="600" 
+            sx={{ 
+              color: isDarkMode ? 'text.primary' : '#fff'
+            }}
+          >
             {modelInfo.title}
           </Typography>
           <IconButton size="small" onClick={onClose} sx={{ 
@@ -683,24 +689,28 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         sx={{
           borderBottom: `1px solid ${theme.palette.divider}`,
           '& .MuiTab-root': {
-            minHeight: 48
+            minHeight: isMobile ? 40 : 48,
+            py: isMobile ? 0.5 : 1
           }
         }}
       >
         <Tab 
-          label="About" 
+          label={isMobile ? "" : "About"} 
           icon={<InfoOutlined fontSize="small" />} 
           iconPosition="start"
+          aria-label="About"
         />
         <Tab 
-          label="Components" 
+          label={isMobile ? "" : "Components"} 
           icon={<Engineering fontSize="small" />} 
           iconPosition="start"
+          aria-label="Components"
         />
         <Tab 
-          label="Notes" 
+          label={isMobile ? "" : "Notes"} 
           icon={<NoteAlt fontSize="small" />} 
           iconPosition="start"
+          aria-label="Notes"
         />
       </Tabs>
 
@@ -709,12 +719,20 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         overflow: 'auto', 
         flexGrow: 1,
         p: 0,
-        maxHeight: 'calc(100vh - 170px)'
+        maxHeight: { xs: 'calc(100% - 110px)', sm: 'calc(100vh - 170px)' },
+        scrollbarWidth: 'thin',
+        '&::-webkit-scrollbar': {
+          width: '6px',
+        },
+        '&::-webkit-scrollbar-thumb': {
+          backgroundColor: 'rgba(0,0,0,0.2)',
+          borderRadius: '3px',
+        }
       }}>
         {/* About Tab */}
         {currentTab === 0 && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="body1" paragraph>
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant="body2" paragraph>
               {modelInfo.description}
             </Typography>
             
@@ -722,8 +740,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 2, 
-                mb: 3, 
+                p: { xs: 1.5, sm: 2 }, 
+                mb: 2, 
                 bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
                 borderRadius: 2
               }}
@@ -735,7 +753,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                 color: theme.palette.primary.main
               }}>
                 <InfoOutlined fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant={isMobile ? "body1" : "subtitle1"} fontWeight={600}>
                   Key Features
                 </Typography>
               </Box>
@@ -756,8 +774,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 2, 
-                mb: 3, 
+                p: { xs: 1.5, sm: 2 }, 
+                mb: 2, 
                 bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
                 borderRadius: 2
               }}
@@ -769,7 +787,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                 color: theme.palette.success.main
               }}>
                 <BarChart fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant={isMobile ? "body1" : "subtitle1"} fontWeight={600}>
                   Applications
                 </Typography>
               </Box>
@@ -790,8 +808,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 2, 
-                mb: 3, 
+                p: { xs: 1.5, sm: 2 }, 
+                mb: 2, 
                 bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
                 borderRadius: 2
               }}
@@ -803,7 +821,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                 color: theme.palette.warning.main
               }}>
                 <School fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant={isMobile ? "body1" : "subtitle1"} fontWeight={600}>
                   Engineering Principles
                 </Typography>
               </Box>
@@ -845,8 +863,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 2, 
-                mb: 3, 
+                p: { xs: 1.5, sm: 2 }, 
+                mb: 2, 
                 bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
                 borderRadius: 2
               }}
@@ -858,7 +876,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                 color: theme.palette.info.main
               }}>
                 <Lightbulb fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant={isMobile ? "body1" : "subtitle1"} fontWeight={600}>
                   Fun Facts
                 </Typography>
               </Box>
@@ -879,8 +897,8 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
             <Paper 
               elevation={0} 
               sx={{ 
-                p: 2, 
-                mb: 3, 
+                p: { xs: 1.5, sm: 2 }, 
+                mb: 2, 
                 bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
                 borderRadius: 2
               }}
@@ -892,7 +910,7 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
                 color: theme.palette.primary.main
               }}>
                 <Link fontSize="small" sx={{ mr: 1 }} />
-                <Typography variant="subtitle1" fontWeight={600}>
+                <Typography variant={isMobile ? "body1" : "subtitle1"} fontWeight={600}>
                   Related Models
                 </Typography>
               </Box>
@@ -923,116 +941,150 @@ const LearningModelSidebar: React.FC<LearningModelSidebarProps> = ({
         
         {/* Components Tab */}
         {currentTab === 1 && (
-          <Box sx={{ p: 2 }}>
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
             <Box sx={{ 
               display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center', 
+              justifyContent: 'space-between',
+              alignItems: 'center',
               mb: 2 
             }}>
-              <Typography variant="subtitle1" fontWeight={600}>
+              <Typography variant={isMobile ? "subtitle1" : "h6"} fontWeight={600}>
                 Model Components
               </Typography>
-              <Tooltip title={explorationMode ? "Exit exploration mode" : "Explore the model"}>
-                <Button
-                  size="small"
-                  startIcon={<AutoAwesome fontSize="small" />}
-                  onClick={handleExplorationToggle}
-                  variant={explorationMode ? "contained" : "outlined"}
-                  color={explorationMode ? "secondary" : "primary"}
-                >
-                  {explorationMode ? "Exit Exploration" : "Start Exploration"}
-                </Button>
-              </Tooltip>
+              
+              <Button
+                variant="contained"
+                color="primary"
+                size={isMobile ? "small" : "medium"}
+                startIcon={<AutoAwesome />}
+                onClick={handleExplorationToggle}
+                sx={{ 
+                  borderRadius: 4,
+                  px: { xs: 1.5, sm: 2 },
+                  py: { xs: 0.5, sm: 1 },
+                  textTransform: 'none',
+                  boxShadow: 2
+                }}
+              >
+                {explorationMode ? "Exit Exploration" : "Start Interactive Exploration"}
+              </Button>
             </Box>
             
-            {explorationMode && (
-              <Typography variant="body2" sx={{ mb: 2, color: 'text.secondary' }}>
-                Click on any component below to highlight it in the 3D model. Click again to remove the highlight.
-              </Typography>
-            )}
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Learn about the key components of this model. Click on a component to highlight it in the 3D view.
+            </Typography>
             
-            <List sx={{ pt: 0 }}>
-              {modelInfo.components.map((component) => (
+            <Box sx={{ 
+              display: 'grid', 
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' },
+              gap: { xs: 1, sm: 2 }
+            }}>
+              {modelInfo.components.map((component, index) => (
                 <Paper
-                  key={component.id}
+                  key={index}
                   elevation={0}
+                  onClick={() => handleComponentClick(component.id)}
                   sx={{
-                    mb: 2,
-                    overflow: 'hidden',
-                    borderRadius: 2,
-                    border: highlightedComponent === component.id ? 
-                      `2px solid ${theme.palette.primary.main}` : 
-                      `1px solid ${theme.palette.divider}`,
-                    cursor: explorationMode ? 'pointer' : 'default',
+                    p: { xs: 1.5, sm: 2 },
+                    cursor: 'pointer',
+                    borderRadius: 1,
+                    border: '1px solid',
+                    borderColor: highlightedComponent === component.id ?
+                      theme.palette.primary.main : theme.palette.divider,
+                    bgcolor: highlightedComponent === component.id ?
+                      (isDarkMode ? 'rgba(25, 118, 210, 0.15)' : 'rgba(25, 118, 210, 0.08)') :
+                      (isDarkMode ? 'background.default' : '#f9f9f9'),
                     transition: 'all 0.2s ease',
-                    '&:hover': explorationMode ? {
-                      borderColor: theme.palette.primary.main,
-                      boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                    } : {}
+                    '&:hover': {
+                      bgcolor: isDarkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                      borderColor: theme.palette.primary.light
+                    }
                   }}
-                  onClick={explorationMode ? () => handleComponentClick(component.id) : undefined}
                 >
-                  <ListItem sx={{ py: 1.5 }}>
-                    <ListItemText
-                      primary={
-                        <Typography variant="subtitle2" fontWeight={500}>
-                          {component.name}
-                        </Typography>
-                      }
-                      secondary={
-                        <Typography variant="body2" sx={{ mt: 0.5 }}>
-                          {component.description}
-                        </Typography>
-                      }
-                    />
-                  </ListItem>
+                  <Typography variant="subtitle2" fontWeight={600} sx={{ mb: 0.5 }}>
+                    {component.name}
+                  </Typography>
+                  <Typography variant="body2" sx={{ 
+                    color: 'text.secondary',
+                    fontSize: { xs: '0.75rem', sm: '0.875rem' }
+                  }}>
+                    {component.description}
+                  </Typography>
                 </Paper>
               ))}
-            </List>
+            </Box>
+            
+            {/* Interactive exploration hint */}
+            {!explorationMode && (
+              <Paper
+                elevation={0}
+                sx={{
+                  mt: 3,
+                  p: { xs: 1.5, sm: 2 },
+                  bgcolor: isDarkMode ? 'rgba(0,0,0,0.2)' : 'rgba(25, 118, 210, 0.05)',
+                  borderRadius: 2,
+                  border: '1px dashed',
+                  borderColor: theme.palette.info.main,
+                  display: 'flex',
+                  alignItems: 'center'
+                }}
+              >
+                <InfoOutlined fontSize="small" color="info" sx={{ mr: 1.5 }} />
+                <Typography variant="body2" color="text.secondary">
+                  Use the <b>Interactive Exploration</b> mode to rotate, zoom and interact with the 3D model.
+                </Typography>
+              </Paper>
+            )}
           </Box>
         )}
         
         {/* Notes Tab */}
         {currentTab === 2 && (
-          <Box sx={{ p: 2 }}>
-            <Typography variant="subtitle1" fontWeight={600} sx={{ mb: 2 }}>
+          <Box sx={{ p: { xs: 1.5, sm: 2 } }}>
+            <Typography variant={isMobile ? "subtitle1" : "h6"} fontWeight={600} sx={{ mb: 2 }}>
               Your Notes
             </Typography>
             <TextField
-              multiline
               fullWidth
-              minRows={8}
-              maxRows={15}
-              placeholder="Take notes about this model here..."
+              multiline
+              variant="outlined"
+              placeholder="Take notes about this model..."
               value={userNotes}
               onChange={handleNoteChange}
-              variant="outlined"
+              minRows={isMobile ? 6 : 8}
+              maxRows={isMobile ? 10 : 15}
               sx={{
                 '& .MuiOutlinedInput-root': {
-                  bgcolor: isDarkMode ? 'background.default' : '#f5f5f5',
+                  borderRadius: 2,
+                  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.01)'
                 }
               }}
             />
             <Box sx={{ 
-              display: 'flex', 
-              justifyContent: 'flex-end', 
               mt: 2, 
-              gap: 1 
+              display: 'flex', 
+              justifyContent: 'flex-end',
+              gap: 1,
+              flexWrap: 'wrap'
             }}>
               <Button 
                 variant="outlined" 
-                size="small"
-                onClick={() => setUserNotes('')}
+                size={isMobile ? "small" : "medium"}
+                sx={{ 
+                  borderRadius: 4,
+                  textTransform: 'none'
+                }}
               >
                 Clear
               </Button>
               <Button 
                 variant="contained" 
-                size="small"
-                onClick={() => {
-                  // In a real app, we would save the notes to a database
-                  alert('Notes saved!');
+                color="primary" 
+                size={isMobile ? "small" : "medium"}
+                sx={{ 
+                  borderRadius: 4,
+                  textTransform: 'none',
+                  boxShadow: 2
                 }}
               >
                 Save Notes

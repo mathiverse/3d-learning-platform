@@ -30,6 +30,7 @@ import {
   PhotoCamera,
   FullscreenExit,
   Refresh,
+  MenuBook,
 } from '@mui/icons-material';
 import DisciplineBackground from './DisciplineBackground';
 import LearningModelSidebar from './LearningModelSidebar';
@@ -136,6 +137,7 @@ const ModelViewer: React.FC = () => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === 'dark';
   const isMobile = useMediaQuery(theme.breakpoints.down('md'));
+  const isSmallScreen = useMediaQuery(theme.breakpoints.down('sm'));
   const controlsRef = useRef<OrbitControls | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -515,7 +517,7 @@ const ModelViewer: React.FC = () => {
       {!isFullscreen && (
         <Box
           sx={{
-            height: { xs: isSidebarOpen ? '40%' : 0, sm: '100%' }, // Take 40% height on mobile, full height otherwise
+            height: { xs: isSidebarOpen ? '100%' : 0, sm: '100%' }, // Take full height on mobile when open
             width: { xs: '100%', sm: isSidebarOpen ? (isMobile ? 260 : 300) : 0 }, // Full width on xs, controlled width on sm+
             transition: {
               xs: 'height 0.3s ease',
@@ -524,7 +526,7 @@ const ModelViewer: React.FC = () => {
             overflow: 'hidden',
             zIndex: 10,
             boxShadow: isSidebarOpen ? 
-              { xs: '0 4px 10px rgba(0, 0, 0, 0.1)', sm: '4px 0px 10px rgba(0, 0, 0, 0.1)' } : 
+              { xs: '0 4px 10px rgba(0, 0, 0, 0.2)', sm: '4px 0px 10px rgba(0, 0, 0, 0.1)' } : 
               'none',
             bgcolor: theme.palette.background.paper,
             position: { xs: 'absolute', sm: 'relative' }, // Position absolute on xs to overlay
@@ -547,7 +549,7 @@ const ModelViewer: React.FC = () => {
         ref={fullscreenContainerRef}
         sx={{
           flexGrow: 1,
-          height: { xs: isSidebarOpen ? '60%' : '100%', sm: '100%' }, // Adjust height based on sidebar on mobile
+          height: '100%', // Always full height
           width: '100%',
           position: 'relative',
           overflow: 'hidden'
@@ -572,38 +574,27 @@ const ModelViewer: React.FC = () => {
           }}
         />
 
-        {/* Sidebar Toggle Button - hide in fullscreen mode */}
-        {!isFullscreen && (
-          <Box
+        {/* Sidebar Toggle Button - hide in fullscreen mode and when sidebar is open */}
+        {!isFullscreen && !isSidebarOpen && (
+          <IconButton
+            onClick={toggleSidebar}
+            aria-label="Open sidebar"
+            size="medium"
             sx={{
+              backgroundColor: theme.palette.background.paper,
               position: 'absolute',
-              top: { xs: isSidebarOpen ? 'calc(40% - 24px)' : '50%', sm: '50%' }, // Position based on sidebar state on mobile
-              left: { xs: '50%', sm: 0 }, // Center horizontally on mobile, left on desktop
-              transform: { 
-                xs: isSidebarOpen ? 'translate(-50%, 0) rotate(90deg)' : 'translate(-50%, -50%) rotate(0deg)', 
-                sm: 'translateY(-50%)' 
-              }, // Different transforms for mobile/desktop
-              zIndex: 5
+              top: 16,
+              left: 16,
+              zIndex: 20,
+              borderRadius: '50%',
+              boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+              '&:hover': {
+                backgroundColor: theme.palette.action.hover
+              }
             }}
           >
-            <IconButton
-              onClick={toggleSidebar}
-              aria-label={isSidebarOpen ? "Close sidebar" : "Open sidebar"}
-              size="large"
-              sx={{
-                backgroundColor: theme.palette.background.paper,
-                borderRadius: { xs: isSidebarOpen ? '50% 50% 0 0' : '50%', sm: '0 50% 50% 0' }, // Different shapes on mobile/desktop
-                boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-                '&:hover': {
-                  backgroundColor: theme.palette.action.hover
-                }
-              }}
-            >
-              {isSidebarOpen ? 
-                <ChevronLeft sx={{ transform: { xs: 'rotate(-90deg)', sm: 'none' } }} /> : 
-                <ChevronRight sx={{ transform: { xs: 'none', sm: 'none' } }} />}
-            </IconButton>
-          </Box>
+            <MenuBook />
+          </IconButton>
         )}
 
         {/* Loading Indicator */}
@@ -676,227 +667,176 @@ const ModelViewer: React.FC = () => {
           </Fade>
         )}
 
+        {/* Floating controls container - adjust position for fullscreen mode */}
+        <Box
+          sx={{
+            position: 'absolute',
+            bottom: { xs: 16, sm: 24 },
+            left: { xs: 16, sm: 24 },
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 1,
+            zIndex: 20,
+            transition: 'all 0.3s ease'
+          }}
+        >
+          <Paper
+            elevation={3}
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: isSmallScreen ? 'column' : 'row',
+              bgcolor: 'background.paper',
+              opacity: 0.9
+            }}
+          >
+            {/* Zoom Controls */}
+            <IconButton
+              onClick={handleZoomIn}
+              size="small"
+              aria-label="Zoom in"
+              sx={{ p: 1 }}
+            >
+              <ZoomIn />
+            </IconButton>
+            <IconButton
+              onClick={handleZoomOut}
+              size="small"
+              aria-label="Zoom out"
+              sx={{ p: 1 }}
+            >
+              <ZoomOut />
+            </IconButton>
+          </Paper>
+
+          {/* Additional Controls */}
+          <Paper
+            elevation={3}
+            sx={{
+              borderRadius: 2,
+              overflow: 'hidden',
+              display: 'flex',
+              flexDirection: isSmallScreen ? 'column' : 'row',
+              bgcolor: 'background.paper',
+              opacity: 0.9
+            }}
+          >
+            <IconButton
+              onClick={toggleWireframe}
+              size="small"
+              aria-label="Toggle wireframe mode"
+              sx={{ 
+                p: 1,
+                color: isWireframe ? theme.palette.primary.main : 'inherit'
+              }}
+            >
+              <GridOn />
+            </IconButton>
+            
+            <IconButton
+              onClick={handleScreenshot}
+              size="small"
+              aria-label="Take screenshot"
+              sx={{ p: 1 }}
+            >
+              <PhotoCamera />
+            </IconButton>
+            
+            <IconButton
+              onClick={handleReset}
+              size="small"
+              aria-label="Reset view"
+              sx={{ p: 1 }}
+            >
+              <Refresh />
+            </IconButton>
+
+            <IconButton
+              onClick={toggleFullscreen}
+              size="small"
+              aria-label={isFullscreen ? "Exit fullscreen" : "Enter fullscreen"}
+              sx={{ p: 1 }}
+            >
+              {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
+            </IconButton>
+          </Paper>
+        </Box>
+
         {/* Screenshot Dialog */}
-        <Dialog 
-          open={screenshotDialogOpen} 
+        <Dialog
+          open={screenshotDialogOpen}
           onClose={() => setScreenshotDialogOpen(false)}
           maxWidth="md"
           fullWidth
-          sx={{
-            '& .MuiDialog-paper': {
-              margin: { xs: '8px', sm: '16px', md: '32px' },
-              width: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)', md: 'auto' },
-              maxHeight: { xs: 'calc(100% - 16px)', sm: 'calc(100% - 32px)', md: 'auto' },
-              zIndex: 11000, // Ultra high z-index above everything
-              borderRadius: { xs: 1, sm: 2 },
-              overflow: 'hidden'
-            },
-            zIndex: 11000, // This ensures the dialog appears above everything else including controls
-            backdropFilter: 'blur(3px)' // Add a blur effect to the backdrop
+          PaperProps={{
+            sx: {
+              borderRadius: 2,
+              maxHeight: '90vh',
+              maxWidth: isSmallScreen ? '95vw' : '80vw'
+            }
           }}
         >
-          <DialogTitle sx={{ 
-            p: { xs: 1.5, sm: 2, md: 3 },
-            fontSize: { xs: '1rem', sm: '1.1rem', md: '1.25rem' }
-          }}>
-            Screenshot
+          <DialogTitle>
+            Model Screenshot
             <IconButton
               onClick={() => setScreenshotDialogOpen(false)}
-              sx={{ 
-                position: 'absolute', 
-                right: { xs: 4, sm: 8 }, 
-                top: { xs: 4, sm: 8 }
+              sx={{
+                position: 'absolute',
+                right: 8,
+                top: 8
               }}
-              aria-label="Close screenshot dialog"
             >
               <Close />
             </IconButton>
           </DialogTitle>
-          <DialogContent sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
+          <DialogContent sx={{ p: 0 }}>
             {screenshotURL && (
-              <Box sx={{ textAlign: 'center' }}>
-                <img 
-                  src={screenshotURL} 
-                  alt="Model Screenshot" 
-                  style={{ 
-                    maxWidth: '100%', 
-                    maxHeight: '60vh',
-                    objectFit: 'contain',
-                    borderRadius: 4,
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.1)'
-                  }} 
-                />
-              </Box>
+              <Box
+                component="img"
+                src={screenshotURL}
+                alt="Model screenshot"
+                sx={{
+                  width: '100%',
+                  height: 'auto',
+                  objectFit: 'contain'
+                }}
+              />
             )}
           </DialogContent>
-          <DialogActions sx={{ p: { xs: 1.5, sm: 2, md: 2.5 }, justifyContent: 'space-between' }}>
-            <Button 
+          <DialogActions sx={{ px: 3, pb: 2, pt: 1 }}>
+            {screenshotURL && (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  const a = document.createElement('a');
+                  a.href = screenshotURL;
+                  a.download = `${discipline}-${modelId}-screenshot.png`;
+                  document.body.appendChild(a);
+                  a.click();
+                  document.body.removeChild(a);
+                }}
+                startIcon={<PhotoCamera />}
+                sx={{
+                  borderRadius: 4,
+                  textTransform: 'none'
+                }}
+              >
+                Download
+              </Button>
+            )}
+            <Button
               onClick={() => setScreenshotDialogOpen(false)}
-              sx={{ minWidth: { xs: 70, sm: 80, md: 100 } }}
+              variant="outlined"
+              sx={{
+                borderRadius: 4,
+                textTransform: 'none'
+              }}
             >
               Close
             </Button>
-            <Button 
-              variant="contained" 
-              component="a"
-              href={screenshotURL || '#'}
-              download={`${discipline}-${modelId}-screenshot.png`}
-              disabled={!screenshotURL}
-              sx={{ 
-                minWidth: { xs: 90, sm: 100, md: 120 },
-                ml: 1
-              }}
-            >
-              Download
-            </Button>
           </DialogActions>
         </Dialog>
-
-        {/* Improve controls responsiveness for mobile */}
-        <Fade in={!isLoading}>
-          <Paper
-            elevation={6}
-            sx={{
-              position: 'absolute',
-              bottom: isMobile ? 16 : 30,
-              left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: isMobile ? 0.5 : 1,
-              p: isMobile ? 0.75 : 1.5,
-              borderRadius: 10,
-              bgcolor: isDarkMode ? 'rgba(30, 30, 30, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-              backdropFilter: 'blur(8px)',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.2)',
-              opacity: 1,
-              zIndex: 10000, // Ultra high z-index but below the dialog
-              transition: 'all 0.3s ease',
-              flexWrap: isMobile ? 'wrap' : 'nowrap',
-              justifyContent: 'center',
-              maxWidth: isMobile ? 'calc(100% - 32px)' : 'auto',
-              '&:hover': {
-                opacity: 1,
-                transform: 'translateX(-50%) scale(1.02)'
-              }
-            }}
-          >
-            <CustomTooltip title="Reset View">
-              <IconButton 
-                onClick={handleReset}
-                size={isMobile ? "small" : "medium"}
-                color="primary"
-                sx={{ 
-                  bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)', 
-                  mr: 0.5 
-                }}
-              >
-                <Refresh />
-              </IconButton>
-            </CustomTooltip>
-
-            <CustomTooltip title="Zoom Out">
-              <IconButton 
-                onClick={handleZoomOut} 
-                size={isMobile ? "small" : "medium"}
-                color="primary"
-                sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
-              >
-                <ZoomOut />
-              </IconButton>
-            </CustomTooltip>
-
-            <CustomTooltip title="Zoom In">
-              <IconButton 
-                onClick={handleZoomIn} 
-                size={isMobile ? "small" : "medium"}
-                color="primary"
-                sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
-              >
-                <ZoomIn />
-              </IconButton>
-            </CustomTooltip>
-
-            <Box sx={{ height: 24, mx: 0.5, width: 1, bgcolor: 'divider' }} />
-
-            <CustomTooltip title={isWireframe ? "Solid Mode" : "Wireframe Mode"}>
-              <IconButton 
-                onClick={toggleWireframe} 
-                size={isMobile ? "small" : "medium"}
-                color={isWireframe ? "secondary" : "primary"}
-                sx={{ 
-                  position: 'relative',
-                  bgcolor: isWireframe ? 
-                    (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.15)') : 
-                    (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)'),
-                  '&::after': isWireframe ? {
-                    content: '""',
-                    position: 'absolute',
-                    top: -4,
-                    right: -4,
-                    width: 8,
-                    height: 8,
-                    borderRadius: '50%',
-                    backgroundColor: 'secondary.main',
-                    animation: 'pulse 1.5s infinite'
-                  } : {}
-                }}
-              >
-                <GridOn />
-              </IconButton>
-            </CustomTooltip>
-
-            <CustomTooltip title="Take Screenshot">
-              <IconButton 
-                onClick={handleScreenshot} 
-                size={isMobile ? "small" : "medium"}
-                color="primary"
-                sx={{ bgcolor: isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)' }}
-              >
-                <PhotoCamera />
-              </IconButton>
-            </CustomTooltip>
-
-            <Box sx={{ height: 24, mx: 0.5, width: 1, bgcolor: 'divider' }} />
-
-            <CustomTooltip title={isFullscreen ? "Exit Fullscreen" : "Fullscreen"}>
-              <IconButton 
-                onClick={toggleFullscreen} 
-                size={isMobile ? "small" : "medium"}
-                color={isFullscreen ? "secondary" : "primary"}
-                sx={{ 
-                  bgcolor: isFullscreen ? 
-                    (isDarkMode ? 'rgba(245,0,87,0.25)' : 'rgba(245,0,87,0.15)') : 
-                    (isDarkMode ? 'rgba(255,255,255,0.1)' : 'rgba(25,118,210,0.1)'),
-                  '&:hover': {
-                    bgcolor: isFullscreen ? 
-                      (isDarkMode ? 'rgba(245,0,87,0.35)' : 'rgba(245,0,87,0.25)') : 
-                      (isDarkMode ? 'rgba(255,255,255,0.2)' : 'rgba(25,118,210,0.2)')
-                  }
-                }}
-              >
-                {isFullscreen ? <FullscreenExit /> : <Fullscreen />}
-              </IconButton>
-            </CustomTooltip>
-          </Paper>
-        </Fade>
-
-        {/* Add pulse animation for active toggles */}
-        <Box
-          sx={{
-            '@keyframes pulse': {
-              '0%': {
-                boxShadow: '0 0 0 0 rgba(245, 0, 87, 0.7)'
-              },
-              '70%': {
-                boxShadow: '0 0 0 6px rgba(245, 0, 87, 0)'
-              },
-              '100%': {
-                boxShadow: '0 0 0 0 rgba(245, 0, 87, 0)'
-              }
-            }
-          }}
-        />
       </Box>
     </Box>
   );
