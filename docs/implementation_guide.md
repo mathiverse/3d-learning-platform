@@ -9,6 +9,7 @@ This guide provides specific technical instructions for implementing the changes
 - [Progress to Resources Conversion](#progress-to-resources-conversion)
 - [Settings Simplification](#settings-simplification)
 - [Performance Optimizations](#performance-optimizations)
+- [Netlify Deployment Guide](#netlify-deployment-guide)
 
 ## Navigation Component Refactoring
 
@@ -792,5 +793,152 @@ const isMobile = useMediaQuery('(max-width:600px)');
   </Alert>
 )}
 ```
+
+## Netlify Deployment Guide
+
+### Current Deployment Configuration
+
+EduDive is configured to deploy on Netlify with the following settings in the `netlify.toml` file:
+
+```toml
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+### Common Deployment Issues and Solutions
+
+#### 1. Build Failures Due to ESLint Warnings
+
+**Issue**: Netlify treats warnings as errors in CI environment, causing build failures when ESLint warnings exist.
+
+**Solution**:
+Add a `.env` file to your project with the following setting:
+
+```
+VITE_DISABLE_ESLINT_PLUGIN=true
+```
+
+Alternatively, update `package.json` to modify the build script:
+
+```json
+"scripts": {
+  "build": "CI=false tsc && vite build"
+}
+```
+
+#### 2. Module Resolution Issues
+
+**Issue**: TypeScript paths or module imports that work locally may fail on Netlify.
+
+**Solution**:
+Ensure all imports use correct casing and relative paths. Update `tsconfig.json` to include:
+
+```json
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  }
+}
+```
+
+#### 3. Node Version Compatibility
+
+**Issue**: Different Node.js versions can cause unexpected build failures.
+
+**Solution**:
+EduDive is already configured to use Node 18 in the `netlify.toml` file. If changes are needed:
+
+```toml
+[build.environment]
+  NODE_VERSION = "18"
+```
+
+#### 4. Large File Handling
+
+**Issue**: Files over 10MB can cause deployment failures on Netlify.
+
+**Solution**:
+- Compress 3D model files using tools like Draco compression
+- Host very large assets externally and reference them
+- Add to `.gitignore` and manage with Git LFS if needed
+
+#### 5. Post-Processing and Cache Issues
+
+**Issue**: SPA routing can cause 404 errors for deep links.
+
+**Solution**:
+The project already has the necessary redirects in `netlify.toml`:
+
+```toml
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+```
+
+### Deployment Best Practices
+
+1. **Local Testing Before Deployment**:
+   ```bash
+   npm run build
+   npx serve -s dist
+   ```
+
+2. **Environment Variables Management**:
+   - Set environment variables in Netlify UI for sensitive data
+   - Use `.env.production` for non-sensitive production values
+   - Reference variables with `import.meta.env.VITE_VARIABLE_NAME` in code
+
+3. **Debugging Deployments**:
+   - Check Netlify build logs for specific errors
+   - Enable Netlify CLI for local testing of production builds:
+     ```bash
+     npm install -g netlify-cli
+     netlify dev
+     ```
+
+4. **Performance Optimizations**:
+   - Enable Brotli compression in `netlify.toml`:
+     ```toml
+     [build.processing]
+       skip_processing = false
+     [build.processing.css]
+       bundle = true
+       minify = true
+     [build.processing.js]
+       bundle = true
+       minify = true
+     [build.processing.html]
+       pretty_urls = true
+     [build.processing.images]
+       compress = true
+     ```
+
+5. **Deploy Previews**:
+   - Utilize Netlify deploy previews for PRs
+   - Test changes in isolation before merging
+
+### Deployment Workflow
+
+1. Develop and test locally
+2. Commit and push changes to GitHub
+3. Netlify automatically builds from the connected repository
+4. Check build logs for any errors
+5. Verify the deployed application functions correctly
+6. If needed, roll back to previous deploy in Netlify UI
+
+By following these guidelines, EduDive can maintain a stable and reliable deployment pipeline on Netlify, ensuring the application is always available to users.
 
 This implementation guide provides code examples for the main areas that need to be addressed according to the action plan. Developers should adapt these examples to fit the existing codebase structure while maintaining the goal of refocusing EduDive as a general learning platform without backend dependencies. 
