@@ -742,14 +742,17 @@ const ModelViewer: React.FC = () => {
         {/* Floating controls container - consistent horizontal layout at bottom */}
         <Box
           sx={{
-            position: 'absolute',
-            bottom: 16,
+            position: 'fixed', // Change from 'absolute' to 'fixed' to ensure it stays visible
+            bottom: { 
+              xs: 'max(24px, env(safe-area-inset-bottom, 24px))', // Use safe area inset with fallback
+              sm: 16 
+            },
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             flexDirection: 'row', // Always horizontal for consistency
             gap: 1,
-            zIndex: 15,
+            zIndex: 1000, // Increased z-index to ensure it's above all elements
             transition: 'all 0.3s ease',
             filter: 'drop-shadow(0px 0px 4px rgba(0,0,0,0.2))',
             // Make sure it doesn't overflow on small screens
@@ -760,19 +763,22 @@ const ModelViewer: React.FC = () => {
             width: { 
               xs: 'calc(100% - 32px)', 
               sm: !isSidebarOpen || isFullscreen ? 'calc(100% - 32px)' : isMobile ? 'calc(100% - 350px - 32px)' : 'calc(100% - 450px - 32px)'
-            }
+            },
+            // Add padding to ensure controls are fully visible above any browser UI
+            paddingBottom: { xs: 'env(safe-area-inset-bottom, 8px)', sm: 0 },
           }}
         >
           {/* First group of controls */}
           <Paper
-            elevation={3}
+            elevation={4} // Increased elevation for better visibility
             sx={{
               borderRadius: 2,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'row', // Always horizontal
-              bgcolor: 'background.paper',
-              opacity: 0.95
+              bgcolor: theme.palette.background.paper,
+              opacity: 0.98, // Slightly increased opacity
+              border: `1px solid ${theme.palette.divider}` // Add border for better visibility
             }}
           >
             {/* Zoom Controls */}
@@ -795,14 +801,15 @@ const ModelViewer: React.FC = () => {
           </Paper>
 
           <Paper
-            elevation={3}
+            elevation={4} // Increased elevation for better visibility
             sx={{
               borderRadius: 2,
               overflow: 'hidden',
               display: 'flex',
               flexDirection: 'row', // Always horizontal
-              bgcolor: 'background.paper',
-              opacity: 0.95
+              bgcolor: theme.palette.background.paper,
+              opacity: 0.98, // Slightly increased opacity
+              border: `1px solid ${theme.palette.divider}` // Add border for better visibility
             }}
           >
             <IconButton
